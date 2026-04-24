@@ -1,0 +1,1084 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NETTAS 2026 - Digital Awakening</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700&family=Outfit:wght@300;600;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root, [data-theme="nettas"] {
+            --bg-color: #020202;
+            --primary-neon: #bf00ff;
+            --secondary-neon: #7000ff;
+            --accent-neon: #ff00d4;
+            --text-color: #ffffff;
+            --glass: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(191, 0, 255, 0.15);
+            --bg-image: linear-gradient(to bottom, rgba(2, 2, 2, 0.4), rgba(2, 2, 2, 0.8)), url('./nettas_bg_new.jpg');
+            --bg-size: cover;
+            --bg-anim: none;
+            --intensity: 1;
+            --logo-filter: drop-shadow(0 0 10px var(--primary-neon));
+            --base-logo-filter: grayscale(100%);
+            --canvas-color: rgba(191, 0, 255, 0.3);
+            --panel-bg: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+            --btn-bg: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.05));
+            --panel-shadow: 0 15px 35px rgba(0, 0, 0, 0.3), 0 10px 0 rgba(255, 255, 255, 0.05), inset 0 0 25px rgba(255, 255, 255, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #050505;
+            --primary-neon: #555555;
+            --secondary-neon: #777777;
+            --accent-neon: #999999;
+            --text-color: #cccccc;
+            --glass: rgba(255, 255, 255, 0.02);
+            --glass-border: rgba(255, 255, 255, 0.05);
+            --bg-image: radial-gradient(circle at center, #111 0%, #000 100%);
+            --bg-size: cover;
+            --bg-anim: none;
+            --logo-filter: drop-shadow(0 0 10px rgba(255,255,255,0.2));
+            --base-logo-filter: grayscale(100%) opacity(0.5);
+            --canvas-color: rgba(255, 255, 255, 0.1);
+            --panel-bg: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+            --btn-bg: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
+            --panel-shadow: 0 15px 35px rgba(0, 0, 0, 0.5), 0 10px 0 rgba(255, 255, 255, 0.02), inset 0 0 25px rgba(255, 255, 255, 0.05);
+        }
+
+        [data-theme="light"] {
+            --bg-color: #f4f6f9;
+            --primary-neon: #bf00ff;
+            --secondary-neon: #7000ff;
+            --accent-neon: #ff00d4;
+            --text-color: #1a1a1a;
+            --glass: #ffffff;
+            --glass-border: rgba(191, 0, 255, 0.2);
+            --bg-image: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+            --bg-size: cover;
+            --bg-anim: none;
+            --logo-filter: invert(1) drop-shadow(0 0 5px rgba(191, 0, 255, 0.3));
+            --base-logo-filter: invert(1) opacity(0.1);
+            --canvas-color: rgba(191, 0, 255, 0.15);
+            --panel-bg: #ffffff;
+            --btn-bg: #ffffff;
+            --panel-shadow: 0 15px 35px rgba(0, 0, 0, 0.05), 0 10px 0 rgba(0, 0, 0, 0.02), inset 0 0 25px rgba(191, 0, 255, 0.05);
+        }
+
+        [data-theme="rgb"] {
+            --bg-color: #000;
+            --primary-neon: #fff;
+            --secondary-neon: #fff;
+            --accent-neon: #fff;
+            --text-color: #fff;
+            --glass: rgba(255, 255, 255, 0.15);
+            --glass-border: rgba(255, 255, 255, 0.4);
+            --bg-image: linear-gradient(-45deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3);
+            --bg-size: 400% 400%;
+            --bg-anim: gradientBG 8s ease infinite;
+            --logo-filter: drop-shadow(0 0 15px rgba(255,255,255,0.8));
+            --base-logo-filter: grayscale(100%) opacity(0.5);
+            --canvas-color: rgba(255, 255, 255, 0.5);
+            --panel-bg: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1));
+            --btn-bg: linear-gradient(135deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.1));
+            --panel-shadow: 0 15px 35px rgba(0, 0, 0, 0.3), 0 10px 0 rgba(255, 255, 255, 0.1), inset 0 0 25px rgba(255, 255, 255, 0.2);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        .bg-festive {
+            background: linear-gradient(-45deg, #ff007f, #7928ca, #00e5ff, #bf00ff) !important;
+            background-size: 400% 400% !important;
+            animation: gradientBG 8s ease infinite !important;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-color);
+            background-image: var(--bg-image);
+            background-size: var(--bg-size);
+            animation: var(--bg-anim);
+            background-position: center;
+            background-repeat: no-repeat;
+            color: var(--text-color);
+            overflow: hidden;
+            height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: env(safe-area-inset-top) 1rem env(safe-area-inset-bottom);
+            font-size: 16px;
+            transition: background 1s ease;
+        }
+
+        .start-btn {
+            background: var(--primary-neon);
+            color: #000;
+            border: none;
+            padding: 1rem 2rem;
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.1rem;
+        }
+
+        .start-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px var(--primary-neon);
+        }
+
+        /* --- Global Overlays --- */
+        .scanlines { position: fixed; inset: 0; background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06)); background-size: 100% 4px, 3px 100%; pointer-events: none; z-index: 100; }
+        .vignette { position: fixed; inset: 0; background: radial-gradient(circle at center, transparent 40%, rgba(0,0,0,0.8) 100%); pointer-events: none; z-index: 99; }
+        #canvas-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; }
+
+        /* --- Default Cursor Restored --- */
+        html, body { cursor: auto; }
+
+        /* --- Audio Visualizer --- */
+        #visualizer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 100px;
+            z-index: -1;
+            opacity: 0.3;
+            pointer-events: none;
+        }
+
+        /* --- Audio & Theme Controls --- */
+        .control-group {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .control-btn, .theme-select {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            color: var(--text-color);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-family: 'Space Grotesk', sans-serif;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            outline: none;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+
+        .theme-select option {
+            background: #020202;
+            color: #fff;
+        }
+
+        .audio-toggle {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* --- Header --- */
+        header { text-align: center; padding-top: 1.5rem; z-index: 10; position: relative; }
+        .online-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(191, 0, 255, 0.1);
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+            border: 1px solid var(--primary-neon);
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.15rem;
+            color: var(--primary-neon);
+            margin-bottom: 0.5rem;
+            box-shadow: 0 0 15px rgba(191, 0, 255, 0.2);
+        }
+
+        h1 { 
+            font-family: 'Space Grotesk', sans-serif; 
+            font-size: clamp(1.5rem, 6vw, 2.2rem); 
+            font-weight: 800; 
+            letter-spacing: 0.3rem; 
+            text-transform: uppercase; 
+        }
+
+        /* --- Stage --- */
+        .stage { 
+            position: relative; 
+            width: min(95vw, 550px); 
+            height: min(95vw, 550px); 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+        }
+        .orbit { position: absolute; border: 1px solid rgba(255,255,255,0.05); border-radius: 50%; animation: rotate 10s linear infinite; }
+        .orbit-1 { width: 100%; height: 100%; border-dasharray: 20 100; border-color: var(--secondary-neon); opacity: 0.3; }
+        .orbit-2 { width: 85%; height: 85%; border-dasharray: 40 150; border-color: var(--primary-neon); animation-direction: reverse; opacity: 0.2; }
+        
+        @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        /* --- Stats (iOS 26 Matte/Glass) --- */
+        .stats-panel { 
+            text-align: center; 
+            z-index: 10; 
+            width: 100%; 
+            max-width: min(90vw, 360px); 
+            background: var(--panel-bg); 
+            padding: 1.5rem; 
+            border-radius: 24px; 
+            border: 1px solid var(--glass-border); 
+            backdrop-filter: blur(25px); 
+            box-shadow: var(--panel-shadow);
+            position: relative;
+            transform: perspective(1000px) rotateX(5deg);
+        }
+
+        .current-count { 
+            font-family: 'Space Grotesk', sans-serif; 
+            font-size: clamp(2.5rem, 10vw, 4rem); 
+            font-weight: 700; 
+            line-height: 1; 
+            margin-bottom: 0.5rem; 
+            color: var(--text-color);
+            text-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            display: inline-block;
+            transform: perspective(1000px) rotateX(10deg);
+        }
+
+        .bar-outer { width: 100%; height: 8px; background: rgba(255,255,255,0.05); border-radius: 4px; overflow: hidden; margin: 1rem 0; position: relative; }
+        .bar-inner { 
+            height: 100%; 
+            width: 0%; 
+            background: linear-gradient(90deg, #fff, rgba(255, 255, 255, 0.5), #fff); 
+            background-size: 200% 100%;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.4); 
+            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1); 
+            position: relative;
+            animation: liquid-flow 2s infinite linear;
+        }
+        @keyframes liquid-flow {
+            0% { background-position: 0% 0%; }
+            100% { background-position: -200% 0%; }
+        }
+        .bar-inner::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: bar-flow 2s linear infinite;
+        }
+        @keyframes bar-flow {
+            from { transform: translateX(-100%); }
+            to { transform: translateX(100%); }
+        }
+
+        /* --- Button (3D iOS 26 Matte/Glass) --- */
+        .btn-wrapper { padding-bottom: 2rem; z-index: 10; perspective: 1000px; }
+        .tap-btn {
+            width: 160px;
+            height: 160px;
+            border-radius: 50%;
+            border: 1px solid var(--glass-border);
+            background: var(--btn-bg);
+            cursor: pointer;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            backdrop-filter: blur(20px);
+            box-shadow: var(--panel-shadow);
+            transform-style: preserve-3d;
+            transform: rotateX(15deg);
+        }
+
+        .tap-btn::after {
+            content: '';
+            position: absolute;
+            top: 10%; left: 10%;
+            width: 80%; height: 40%;
+            background: linear-gradient(to bottom, rgba(255,255,255,0.4), transparent);
+            border-radius: 50% 50% 50% 50% / 100% 100% 0% 0%;
+            pointer-events: none;
+        }
+
+        .tap-btn:active { 
+            transform: rotateX(5deg) translateY(10px); 
+            box-shadow: 0 2px 0 var(--glass-border), 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-label { 
+            font-family: 'Space Grotesk', sans-serif; 
+            font-weight: 700; 
+            font-size: 0.9rem; 
+            letter-spacing: 0.2rem; 
+            color: var(--text-color);
+            text-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transform: translateZ(20px);
+        }
+
+        /* --- Victory --- */
+        .victory-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 20000; display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; backdrop-filter: blur(10px); }
+        .victory-modal.show { display: flex; animation: fadeIn 0.5s; }
+        .victory-modal.show .victory-title { animation: bounceIn 1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+        .victory-modal.show .victory-subtitle { animation: bounceIn 1s 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; opacity: 0; }
+        .victory-modal.show .victory-fun-tag { animation: bounceIn 1s 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; opacity: 0; }
+        
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes bounceIn { 
+            0% { transform: scale(0.5) translateY(50px); opacity: 0; } 
+            100% { transform: scale(1) translateY(0); opacity: 1; } 
+        }
+
+        .victory-title {
+            font-family: 'Space Grotesk';
+            font-size: clamp(3rem, 10vw, 6rem);
+            color: #fff;
+            text-shadow: 0 0 20px var(--primary-neon), 0 0 40px var(--secondary-neon);
+            line-height: 1.1;
+        }
+
+        .victory-subtitle {
+            margin-top: 1rem;
+            color: #ff0;
+            letter-spacing: 0.3rem;
+            font-size: clamp(1.2rem, 4vw, 2rem);
+            font-weight: 800;
+            text-shadow: 0 0 10px rgba(255,255,0,0.5);
+            text-transform: uppercase;
+        }
+
+        .victory-fun-tag {
+            font-family: 'Space Grotesk';
+            color: #00e5ff;
+            font-weight: 900;
+            margin-top: 0.5rem;
+            font-size: clamp(1rem, 3vw, 1.5rem);
+            text-shadow: 0 0 10px rgba(0, 229, 255, 0.5);
+            letter-spacing: 0.2rem;
+        }
+
+        /* --- Festive Additions --- */
+        .data-stream {
+            position: fixed;
+            top: 0;
+            font-family: 'Space Grotesk', monospace;
+            font-size: 0.7rem;
+            color: var(--primary-neon);
+            opacity: 0.15;
+            pointer-events: none;
+            white-space: nowrap;
+            writing-mode: vertical-rl;
+            text-orientation: upright;
+            animation: stream-down 20s linear infinite;
+        }
+
+        @keyframes stream-down {
+            from { transform: translateY(-100%); }
+            to { transform: translateY(100vh); }
+        }
+
+        .tap-particle {
+            position: absolute;
+            color: var(--accent-neon);
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: bold;
+            pointer-events: none;
+            animation: float-up 1s ease-out forwards;
+            z-index: 100;
+        }
+
+        @keyframes float-up {
+            0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+            100% { transform: translate(-50%, -150%) scale(1.5); opacity: 0; }
+        }
+
+        /* --- Ultra Festive Emojis & Strobe --- */
+        .falling-emoji {
+            position: fixed;
+            top: -50px;
+            font-size: clamp(2rem, 5vw, 4rem);
+            pointer-events: none;
+            z-index: 25000;
+            animation: fallDown 2s ease-in forwards;
+        }
+        @keyframes fallDown {
+            0% { transform: translateY(0) rotate(0deg) scale(1); opacity: 1; }
+            100% { transform: translateY(110vh) rotate(360deg) scale(1.5); opacity: 0; }
+        }
+
+        .floating-emoji {
+            position: fixed;
+            font-size: clamp(2rem, 5vw, 4rem);
+            pointer-events: none;
+            z-index: 25000;
+            animation: floatUpEmoji 4s ease-in forwards;
+        }
+        @keyframes floatUpEmoji {
+            0% { transform: translateY(110vh) rotate(-20deg) scale(0.5); opacity: 0; }
+            10% { opacity: 1; }
+            80% { opacity: 1; }
+            100% { transform: translateY(-20vh) rotate(360deg) scale(1.5); opacity: 0; }
+        }
+
+        .strobe-bg {
+            position: fixed; inset: 0; z-index: 9999;
+            pointer-events: none;
+            animation: strobeEffect 0.15s infinite;
+        }
+        @keyframes strobeEffect {
+            0%, 49% { background-color: rgba(255, 255, 255, 0.15); }
+            50%, 100% { background-color: transparent; }
+        }
+        
+        .pulse-text {
+            animation: pulseContinuous 0.5s infinite alternate !important;
+        }
+        @keyframes pulseContinuous {
+            from { transform: scale(1); text-shadow: 0 0 20px var(--primary-neon); }
+            to { transform: scale(1.1); text-shadow: 0 0 50px var(--primary-neon), 0 0 80px #fff; }
+        }
+
+        .glow-pulse {
+            animation: pulse-glow 2s infinite alternate;
+        }
+
+        @keyframes pulse-glow {
+            from { filter: drop-shadow(0 0 5px var(--primary-neon)); }
+            to { filter: drop-shadow(0 0 20px var(--primary-neon)); }
+        }
+
+        .shockwave {
+            position: absolute;
+            border: 2px solid var(--primary-neon);
+            border-radius: 50%;
+            pointer-events: none;
+            animation: shockwave-anim 0.5s ease-out forwards;
+            z-index: 50;
+        }
+
+        @keyframes shockwave-anim {
+            0% { width: 0; height: 0; opacity: 1; }
+            100% { width: 200px; height: 200px; opacity: 0; }
+        }
+
+        /* --- Meteors --- */
+        .meteors {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .meteor {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 2px;
+            height: 2px;
+            background: #fff;
+            border-radius: 50%;
+            box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.1), 0 0 0 8px rgba(255, 255, 255, 0.1), 0 0 20px rgba(255, 255, 255, 1);
+            animation: shoot 3s linear infinite;
+        }
+
+        .meteor::before {
+            content: "";
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 300px;
+            height: 1px;
+            background: linear-gradient(90deg, #fff, transparent);
+        }
+
+        @keyframes shoot {
+            0% { transform: rotate(315deg) translateX(0); opacity: 1; }
+            70% { opacity: 1; }
+            100% { transform: rotate(315deg) translateX(-1000px); opacity: 0; }
+        }
+
+        .meteor:nth-child(1) { top: -10%; left: 100%; animation-delay: 0s; animation-duration: 4s; }
+        .meteor:nth-child(2) { top: 10%; left: 110%; animation-delay: 2s; animation-duration: 3s; }
+        .meteor:nth-child(3) { top: 30%; left: 120%; animation-delay: 4s; animation-duration: 5s; }
+        .meteor:nth-child(4) { top: 0%; left: 90%; animation-delay: 1s; animation-duration: 2.5s; }
+        .meteor:nth-child(5) { top: 50%; left: 130%; animation-delay: 6s; animation-duration: 6s; }
+        .meteor:nth-child(5) { top: 50%; left: 130%; animation-delay: 6s; animation-duration: 6s; }
+
+        /* --- Elite Visuals --- */
+        h1 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 2.2rem;
+            font-weight: 800;
+            letter-spacing: 0.5rem;
+            text-transform: uppercase;
+            text-shadow: 0 0 10px var(--primary-neon), 0 0 20px var(--primary-neon);
+            animation: flicker 4s linear infinite;
+        }
+
+        @keyframes flicker {
+            0%, 18%, 22%, 25%, 53%, 57%, 100% { opacity: 1; text-shadow: 0 0 10px var(--primary-neon), 0 0 20px var(--primary-neon); }
+            20%, 24%, 55% { opacity: 0.5; text-shadow: none; }
+        }
+
+        .hud-corner {
+            position: fixed;
+            width: 50px;
+            height: 50px;
+            border: 2px solid var(--glass-border);
+            z-index: 100;
+            pointer-events: none;
+            opacity: 0.5;
+        }
+        .top-left { top: 20px; left: 20px; border-right: none; border-bottom: none; }
+        .top-right { top: 20px; right: 20px; border-left: none; border-bottom: none; }
+        .bottom-left { bottom: 20px; left: 20px; border-right: none; border-top: none; }
+        .bottom-right { bottom: 20px; right: 20px; border-left: none; border-top: none; }
+
+        .screen-flash {
+            position: fixed;
+            inset: 0;
+            background: var(--primary-neon);
+            opacity: 0;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        @keyframes flash-anim {
+            0% { opacity: 0.2; }
+            100% { opacity: 0; }
+        }
+
+        .shake {
+            animation: shake-anim 0.1s ease-in-out;
+        }
+
+        @keyframes shake-anim {
+            0%, 100% { transform: translate(0, 0); }
+            25% { transform: translate(2px, -2px); }
+            50% { transform: translate(-2px, 2px); }
+            75% { transform: translate(2px, 2px); }
+        }
+    </style>
+</head>
+<body>
+
+
+    <div class="scanlines"></div>
+    <div class="vignette"></div>
+    <div class="hud-corner top-left"></div>
+    <div class="hud-corner top-right"></div>
+    <div class="hud-corner bottom-left"></div>
+    <div class="hud-corner bottom-right"></div>
+    <div id="flash-overlay" class="screen-flash"></div>
+    <div class="control-group">
+        <select id="theme-dropdown" class="theme-select" onchange="changeTheme(this.value)">
+            <option value="nettas">Theme: NETTAS</option>
+            <option value="dark">Theme: Dark</option>
+            <option value="light">Theme: Light</option>
+            <option value="rgb">Theme: RGB</option>
+        </select>
+        <button class="control-btn audio-toggle" onclick="toggleMusic()">
+            <span id="music-status">MUSIC: OFF</span>
+        </button>
+    </div>
+    <div class="meteors">
+        <div class="meteor"></div>
+        <div class="meteor"></div>
+        <div class="meteor"></div>
+        <div class="meteor"></div>
+        <div class="meteor"></div>
+    </div>
+    <canvas id="canvas-bg"></canvas>
+    <canvas id="visualizer"></canvas>
+
+    <header>
+        <div class="data-stream" style="left: 10px; animation-duration: 15s;">SYSTEM_ONLINE_NODE_ACTIVE_SYNCING_DATA_STREAM</div>
+        <div class="data-stream" style="right: 10px; animation-duration: 25s;">NETTAS_2026_PROTOCOL_X7_INITIALIZING_RESOURCES</div>
+        <div class="online-status">
+            <div class="status-dot"></div>
+            <span id="presence-count">1</span> NODE CONNECTED
+        </div>
+        <h1>NETTAS 2026</h1>
+    </header>
+
+    <div class="stage">
+        <div class="orbit orbit-1"></div>
+        <div class="orbit orbit-2"></div>
+        <div id="logo-container" class="glow-pulse" style="position: relative; width: clamp(260px, 65vw, 360px); height: clamp(260px, 65vw, 360px);">
+            <!-- Base logo (dimmed) -->
+            <img src="./nettas_logo_new.png" alt="NETTAS Logo Base" style="width: 100%; height: 100%; object-fit: contain; position: absolute; top: 0; left: 0; pointer-events: none; filter: var(--base-logo-filter); opacity: 0.2;">
+            <!-- Filled logo (bright) -->
+            <img id="liquid-fill-img" src="./nettas_logo_new.png" alt="NETTAS Logo Fill" style="width: 100%; height: 100%; object-fit: contain; position: absolute; top: 0; left: 0; clip-path: inset(100% 0 0 0); transition: clip-path 0.5s ease; pointer-events: none; filter: var(--logo-filter);">
+        </div>
+    </div>
+
+    <div class="stats-panel">
+        <span class="current-count" id="tap-val">0</span>
+        <div style="display: flex; justify-content: space-between; font-size: 0.6rem; color: #666; font-weight: 700;">
+            <span>TOTAL ACTIVATIONS</span>
+            <span id="percent-val">0%</span>
+        </div>
+        <div class="bar-outer">
+            <div class="bar-inner" id="progress-bar"></div>
+        </div>
+    </div>
+
+    <div class="btn-wrapper">
+        <button class="tap-btn" id="tap-action">
+            <span class="btn-label">ACTIVATE</span>
+        </button>
+    </div>
+
+    <div id="strobe-layer"></div>
+    <div class="victory-modal" id="victory-modal">
+        <h2 class="victory-title" id="mega-title">WELCOME TO<br>NETTAS 2026</h2>
+        <p class="victory-subtitle">I'M THE FUTURE ENGINEER</p>
+        <p class="victory-fun-tag">FULL SYSTEM ACCESS GRANTED</p>
+        <div style="margin-top: 3rem;">
+            <button class="start-btn" onclick="resetSystem()" style="box-shadow: 0 0 30px #fff;">RE-INITIALIZE SYSTEM</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, onValue, set, onDisconnect, runTransaction } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDpBAqNdwlaJuYuVkHctQajZ88L9vNH2m8",
+            authDomain: "nettas-2026.firebaseapp.com",
+            databaseURL: "https://nettas-2026-default-rtdb.firebaseio.com",
+            projectId: "nettas-2026",
+            storageBucket: "nettas-2026.firebasestorage.app",
+            messagingSenderId: "80162030314",
+            appId: "1:80162030314:web:6f0857934966f517eccd93",
+            measurementId: "G-Y9HWJ3BEMD"
+        };
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const clicksRef = ref(db, 'global_clicks');
+        const presenceRef = ref(db, 'presence');
+        const connectedRef = ref(db, '.info/connected');
+
+        window.resetSystem = () => {
+            if (confirm("Apakah Anda yakin ingin me-reset seluruh progres aktivasi global kembali ke 0?")) {
+                set(clicksRef, 0);
+                location.reload();
+            }
+        };
+
+        const TARGET = 200;
+        let isFinished = false;
+        let currentProgressPercentage = 0;
+
+
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        let bgMusic = new Audio('https://cdn.pixabay.com/audio/2022/03/24/audio_7306283b27.mp3');
+        bgMusic.loop = true;
+        bgMusic.volume = 0.4;
+        bgMusic.crossOrigin = "anonymous";
+
+        let analyser, source;
+        let visualizerInited = false;
+
+        window.toggleMusic = async () => {
+            if (audioCtx.state === 'suspended') await audioCtx.resume();
+            if (!visualizerInited) initVisualizer();
+            
+            if (bgMusic.paused) {
+                bgMusic.play().catch(e => console.error("Audio play failed:", e));
+                document.getElementById('music-status').innerText = 'MUSIC: ON';
+            } else {
+                bgMusic.pause();
+                document.getElementById('music-status').innerText = 'MUSIC: OFF';
+            }
+        };
+
+        function initVisualizer() {
+            source = audioCtx.createMediaElementSource(bgMusic);
+            analyser = audioCtx.createAnalyser();
+            source.connect(analyser);
+            analyser.connect(audioCtx.destination);
+            analyser.fftSize = 256;
+            visualizerInited = true;
+            drawVisualizer();
+        }
+
+        const vCanvas = document.getElementById('visualizer');
+        const vCtx = vCanvas.getContext('2d');
+        function drawVisualizer() {
+            requestAnimationFrame(drawVisualizer);
+            if (!analyser) return;
+            const bufferLength = analyser.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+            analyser.getByteFrequencyData(dataArray);
+
+            vCanvas.width = window.innerWidth;
+            vCanvas.height = 100;
+            vCtx.clearRect(0, 0, vCanvas.width, vCanvas.height);
+            
+            const barWidth = (vCanvas.width / bufferLength) * 2.5;
+            let barHeight;
+            let x = 0;
+
+            for(let i = 0; i < bufferLength; i++) {
+                barHeight = dataArray[i] / 2;
+                vCtx.fillStyle = `rgba(191, 0, 255, ${barHeight/100})`;
+                vCtx.fillRect(x, vCanvas.height - barHeight, barWidth, barHeight);
+                x += barWidth + 1;
+            }
+        }
+
+        /* --- Cursor System Removed --- */
+        
+        function playTapSound() {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            
+            // Mechanical Keyboard Clack Effect
+            const osc1 = audioCtx.createOscillator(); // The "clack"
+            const osc2 = audioCtx.createOscillator(); // The "bottom out"
+            const noise = audioCtx.createBufferSource(); // The "friction"
+            const gain = audioCtx.createGain();
+
+            // Calculate pitch multiplier based on progress (up to 3x higher)
+            const pitchMultiplier = 1 + (currentProgressPercentage / 100) * 2;
+
+            // High frequency clack
+            osc1.type = 'triangle';
+            osc1.frequency.setValueAtTime(1200 * pitchMultiplier, audioCtx.currentTime);
+            osc1.frequency.exponentialRampToValueAtTime(100 * pitchMultiplier, audioCtx.currentTime + 0.05);
+
+            // Low frequency bottom-out
+            osc2.type = 'sine';
+            osc2.frequency.setValueAtTime(150 * pitchMultiplier, audioCtx.currentTime);
+            osc2.frequency.exponentialRampToValueAtTime(40 * pitchMultiplier, audioCtx.currentTime + 0.1);
+
+            // White noise burst
+            const bufferSize = audioCtx.sampleRate * 0.05;
+            const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+            noise.buffer = buffer;
+
+            gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
+
+            osc1.connect(gain);
+            osc2.connect(gain);
+            noise.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            // Melodic ping that goes up in pitch
+            const osc3 = audioCtx.createOscillator();
+            const gain3 = audioCtx.createGain();
+            osc3.type = 'sine';
+            const baseFreq = 400 + (currentProgressPercentage / 100) * 800; // 400Hz to 1200Hz
+            osc3.frequency.setValueAtTime(baseFreq, audioCtx.currentTime);
+            gain3.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain3.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.15);
+            osc3.connect(gain3);
+            gain3.connect(audioCtx.destination);
+
+            osc1.start();
+            osc2.start();
+            noise.start();
+            osc3.start();
+            
+            osc1.stop(audioCtx.currentTime + 0.1);
+            osc2.stop(audioCtx.currentTime + 0.1);
+            noise.stop(audioCtx.currentTime + 0.1);
+            osc3.stop(audioCtx.currentTime + 0.15);
+        }
+
+        function playSuccessSound() {
+            const notes = [261.63, 329.63, 392.00, 523.25, 659.25, 783.99, 1046.50];
+            notes.forEach((freq, i) => {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime + i * 0.1);
+                gain.gain.setValueAtTime(0, audioCtx.currentTime + i * 0.1);
+                gain.gain.linearRampToValueAtTime(0.1, audioCtx.currentTime + i * 0.1 + 0.05);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + i * 0.1 + 0.5);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(audioCtx.currentTime + i * 0.1);
+                osc.stop(audioCtx.currentTime + i * 0.1 + 0.5);
+            });
+        }
+
+        onValue(connectedRef, (snap) => {
+            if (snap.val() === true) {
+                const myPresence = ref(db, 'presence/' + Math.random().toString(36).substr(2, 9));
+                set(myPresence, true);
+                onDisconnect(myPresence).remove();
+            }
+        });
+
+        onValue(presenceRef, (snap) => {
+            document.getElementById('presence-count').innerText = snap.size || 1;
+        });
+
+        onValue(clicksRef, (snap) => {
+            updateUI(snap.val() || 0);
+        });
+
+        function updateUI(count) {
+            currentProgressPercentage = Math.min((count / TARGET) * 100, 100);
+            document.getElementById('tap-val').innerText = count.toLocaleString();
+            document.getElementById('percent-val').innerText = Math.floor(currentProgressPercentage) + '%';
+            document.getElementById('progress-bar').style.width = currentProgressPercentage + '%';
+            document.getElementById('liquid-fill-img').style.clipPath = `inset(${100 - currentProgressPercentage}% 0 0 0)`;
+            if (currentProgressPercentage >= 100 && !isFinished) win();
+        }
+
+        document.getElementById('tap-action').addEventListener('pointerdown', (e) => {
+            if (isFinished) return;
+            playTapSound();
+            if (navigator.vibrate) navigator.vibrate(50);
+            runTransaction(clicksRef, (curr) => (curr || 0) + 1);
+            createTapEffect(e.clientX, e.clientY);
+            createShockwave(e.clientX, e.clientY);
+            triggerImpact();
+            spawnFallingEmojiOnClick();
+        });
+
+        function triggerImpact() {
+            const flash = document.getElementById('flash-overlay');
+            flash.style.animation = 'none';
+            flash.offsetHeight; 
+            flash.style.animation = 'flash-anim 0.2s ease-out forwards';
+            
+            document.body.classList.add('shake');
+            setTimeout(() => document.body.classList.remove('shake'), 100);
+        }
+
+        function createTapEffect(x, y) {
+            const el = document.createElement('div');
+            el.className = 'tap-particle';
+            const texts = ['+1 NODE', 'SYNCING...', 'DATA_PUSH', 'LINKED', 'ACTIVE'];
+            el.innerText = texts[Math.floor(Math.random() * texts.length)];
+            el.style.left = x + 'px';
+            el.style.top = y + 'px';
+            document.body.appendChild(el);
+            setTimeout(() => el.remove(), 1000);
+        }
+
+        function spawnFallingEmojiOnClick() {
+            const emojis = ['🤩', '😂', '🔥', '🎉', '🚀', '💖', '😎', '🎊', '✨', '🥳', '💯'];
+            const el = document.createElement('div');
+            el.className = 'falling-emoji';
+            el.innerText = emojis[Math.floor(Math.random() * emojis.length)];
+            el.style.left = (Math.random() * 90) + 'vw';
+            el.style.animationDuration = (1.5 + Math.random() * 1.5) + 's';
+            document.body.appendChild(el);
+            setTimeout(() => el.remove(), 3000);
+        }
+
+        function createShockwave(x, y) {
+            const el = document.createElement('div');
+            el.className = 'shockwave';
+            el.style.left = x + 'px';
+            el.style.top = y + 'px';
+            el.style.transform = 'translate(-50%, -50%)';
+            document.body.appendChild(el);
+            setTimeout(() => el.remove(), 500);
+        }
+
+        function playPartyHorn() {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            
+            // Synthesized Party Horn (Trumpet style)
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            const filter = audioCtx.createBiquadFilter();
+
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(200, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(400, audioCtx.currentTime + 0.1);
+            osc.frequency.exponentialRampToValueAtTime(300, audioCtx.currentTime + 0.5);
+
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(2000, audioCtx.currentTime);
+
+            gain.gain.setValueAtTime(0, audioCtx.currentTime);
+            gain.gain.linearRampToValueAtTime(0.3, audioCtx.currentTime + 0.05);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.8);
+
+            osc.connect(filter);
+            filter.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.8);
+        }
+
+        function win() {
+            if (isFinished) return;
+            isFinished = true;
+            
+            // Mega Visual Transition
+            document.body.classList.add('bg-festive');
+            document.getElementById('victory-modal').classList.add('show');
+            document.getElementById('strobe-layer').classList.add('strobe-bg');
+            
+            // Make title pulse infinitely after entrance
+            setTimeout(() => {
+                document.getElementById('mega-title').classList.add('pulse-text');
+            }, 1000);
+            
+            // Festive Sounds
+            playPartyHorn();
+            setTimeout(playPartyHorn, 300); // Double horn!
+            setTimeout(playPartyHorn, 600); // Triple horn!
+            playSuccessSound();
+            
+            fireworksShow();
+        }
+
+        function spawnFloatingEmoji() {
+            const emojis = ['🎉', '🚀', '✨', '🎊', '🔥', '💎', '🥳'];
+            const el = document.createElement('div');
+            el.className = 'floating-emoji';
+            el.innerText = emojis[Math.floor(Math.random() * emojis.length)];
+            el.style.left = (Math.random() * 90) + 'vw';
+            // Randomize duration slightly
+            el.style.animationDuration = (3 + Math.random() * 2) + 's';
+            document.body.appendChild(el);
+            setTimeout(() => el.remove(), 5000);
+        }
+
+        function fireworksShow() {
+            const duration = 15 * 1000;
+            const animationEnd = Date.now() + duration;
+            const defaults = { startVelocity: 55, spread: 360, ticks: 120, zIndex: 21000 };
+
+            function randomInRange(min, max) {
+              return Math.random() * (max - min) + min;
+            }
+
+            // Mega Massive Initial Blasts (3 times)
+            for(let i=0; i<3; i++) {
+                setTimeout(() => {
+                    confetti({ particleCount: 250, spread: 200, origin: { y: 0.5 }, colors: ['#FFD700', '#FF1493', '#00FFFF', '#FF4500', '#00FF00', '#9400D3'], zIndex: 21000 });
+                }, i * 300);
+            }
+
+            // Festive interval
+            const interval = setInterval(function() {
+              const timeLeft = animationEnd - Date.now();
+              if (timeLeft <= 0) return clearInterval(interval);
+
+              const particleCount = 80 * (timeLeft / duration);
+              
+              // Continuous multi-directional bursts
+              confetti(Object.assign({}, defaults, { 
+                particleCount, 
+                origin: { x: randomInRange(0.1, 0.4), y: Math.random() - 0.2 },
+                colors: ['#fff', '#f00', '#ff0', '#0f0', '#00f']
+              }));
+              confetti(Object.assign({}, defaults, { 
+                particleCount, 
+                origin: { x: randomInRange(0.6, 0.9), y: Math.random() - 0.2 },
+                colors: ['#0ff', '#f0f', '#fff', '#ffa500', '#ff1493']
+              }));
+              
+              // Spawn a good amount of floating emojis
+              for(let i=0; i<3; i++) spawnFloatingEmoji();
+
+              // Side cannons
+              if (Math.random() > 0.5) {
+                confetti({
+                  particleCount: 80,
+                  angle: 60,
+                  spread: 80,
+                  origin: { x: 0, y: 0.8 },
+                  zIndex: 21000,
+                  colors: ['#FFD700', '#FF1493']
+                });
+                confetti({
+                  particleCount: 80,
+                  angle: 120,
+                  spread: 80,
+                  origin: { x: 1, y: 0.8 },
+                  zIndex: 21000,
+                  colors: ['#00FFFF', '#00FF00']
+                });
+              }
+            }, 150);
+        }
+
+        const canvas = document.getElementById('canvas-bg');
+        const ctx = canvas.getContext('2d');
+        let pts = [];
+        let currentCanvasColor = 'rgba(191, 0, 255, 0.3)';
+
+        function init() {
+            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+            pts = [];
+            for(let i=0; i<80; i++) pts.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, vx: (Math.random()-0.5)*0.5, vy: (Math.random()-0.5)*0.5, s: Math.random()*2 });
+            updateCanvasColor();
+        }
+
+        function updateCanvasColor() {
+            currentCanvasColor = getComputedStyle(document.documentElement).getPropertyValue('--canvas-color').trim() || 'rgba(191, 0, 255, 0.3)';
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = currentCanvasColor;
+            pts.forEach(p => {
+                p.x += p.vx; p.y += p.vy;
+                if(p.x<0) p.x=canvas.width; if(p.x>canvas.width) p.x=0;
+                if(p.y<0) p.y=canvas.height; if(p.y>canvas.height) p.y=0;
+                ctx.beginPath(); ctx.arc(p.x, p.y, p.s, 0, Math.PI*2); ctx.fill();
+            });
+            requestAnimationFrame(draw);
+        }
+        window.onresize = init; init(); draw();
+
+        // Theme Switcher Logic
+        window.changeTheme = (theme) => {
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('nettas-theme', theme);
+            updateCanvasColor();
+        };
+
+        const savedTheme = localStorage.getItem('nettas-theme') || 'nettas';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        document.getElementById('theme-dropdown').value = savedTheme;
+    </script>
+</body>
+</html>
