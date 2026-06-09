@@ -1485,17 +1485,26 @@
                     const userData = snap.val();
 
                     if (userData) {
-                        // Node sudah ada, butuh verifikasi PIN
+                        // Cek apakah node lama sudah memiliki PIN pengaman
+                        const hasPin = userData.pinHash ? true : false;
+                        
                         introStep1.style.display = 'none';
                         introStep2.style.display = 'flex';
-                        pinPromptText.innerHTML = `NODE <strong>"${inputName}"</strong> TELAH TERDAFTAR.<br>MASUKKAN PIN NODE ANDA UNTUK LOGIN.`;
-                        btnConfirmPin.innerText = '⚡ VERIFIKASI & MASUK';
+                        
+                        if (hasPin) {
+                            pinPromptText.innerHTML = `NODE <strong>"${inputName}"</strong> TELAH TERDAFTAR.<br>MASUKKAN PIN NODE ANDA UNTUK LOGIN.`;
+                            btnConfirmPin.innerText = '⚡ VERIFIKASI & MASUK';
+                            tempLoginIsNew = false;
+                        } else {
+                            pinPromptText.innerHTML = `NODE <strong>"${inputName}"</strong> DIKENAL TANPA PENGAMAN.<br>BUAT PIN BARU (4-6 ANGKA) UNTUK MENGAMANKAN NODE INI.`;
+                            btnConfirmPin.innerText = '⚡ AMANKAN & MASUK';
+                            tempLoginIsNew = true;
+                        }
                         nodePinInput.value = '';
                         pinErrorText.style.display = 'none';
 
                         tempLoginNodeId = normalizedId;
                         tempLoginNodeName = userData.name;
-                        tempLoginIsNew = false;
                     } else {
                         // Node baru, minta buat PIN baru
                         introStep1.style.display = 'none';
@@ -1540,26 +1549,35 @@
             const pinHash = await sha256(pin);
 
             if (tempLoginIsNew) {
-                // Daftarkan Node Baru
+                // Daftarkan Node Baru ATAU Amankan Node Lama Tanpa PIN
                 const updates = {};
-                updates[`users/${tempLoginNodeId}`] = {
-                    name: tempLoginNodeName,
-                    clicks: 0,
-                    pinHash: pinHash
-                };
+                updates[`users/${tempLoginNodeId}/pinHash`] = pinHash;
                 updates[`user_pins/${tempLoginNodeId}`] = pinHash;
 
-                update(ref(db), updates).then(() => {
-                    btnConfirmPin.disabled = false;
-                    btnConfirmPin.innerText = '⚡ DAFTAR & HUBUNGKAN';
-                    completeLogin(tempLoginNodeId, tempLoginNodeName, pinHash, 0);
+                // Ambil data clicks yang sudah ada untuk node lama (atau 0 untuk node baru)
+                get(ref(db, `users/${tempLoginNodeId}`)).then((snap) => {
+                    const userData = snap.val() || {};
+                    const existingClicks = userData.clicks || 0;
+
+                    updates[`users/${tempLoginNodeId}/name`] = tempLoginNodeName;
+                    updates[`users/${tempLoginNodeId}/clicks`] = existingClicks;
+
+                    update(ref(db), updates).then(() => {
+                        btnConfirmPin.disabled = false;
+                        btnConfirmPin.innerText = '⚡ DAFTAR & HUBUNGKAN';
+                        completeLogin(tempLoginNodeId, tempLoginNodeName, pinHash, existingClicks);
+                    }).catch((err) => {
+                        btnConfirmPin.disabled = false;
+                        btnConfirmPin.innerText = '⚡ DAFTAR & HUBUNGKAN';
+                        showPinError('GAGAL MENDAFTAR: ' + err.message);
+                    });
                 }).catch((err) => {
                     btnConfirmPin.disabled = false;
                     btnConfirmPin.innerText = '⚡ DAFTAR & HUBUNGKAN';
-                    showPinError('GAGAL MENDAFTAR: ' + err.message);
+                    showPinError('GAGAL MEMVERIFIKASI DATA LAMA: ' + err.message);
                 });
             } else {
-                // Verifikasi PIN Node Lama
+                // Verifikasi PIN Node Lama yang sudah ada PIN nya
                 try {
                     // Ambil click count terbaru
                     const userRef = ref(db, `users/${tempLoginNodeId}`);
