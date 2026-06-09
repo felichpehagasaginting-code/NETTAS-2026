@@ -1400,66 +1400,78 @@
         function playTapSound() {
             if (audioCtx.state === 'suspended') audioCtx.resume();
             
-            // Frekuensi naik bersih dari 110Hz (A2 - deep bass thock) ke 660Hz (E5 - clean high pitch)
-            // Tanpa ada pengulangan atau penurunan nada, murni mengikuti progres bar global 0% - 100%
-            const baseFreq = 110;
-            const maxFreq = 660;
-            const frequency = baseFreq + (currentProgressPercentage / 100) * (maxFreq - baseFreq);
-
-            // 1. Bodi utama suara (Sine wave untuk thock bulat, deep, & bersih)
-            const osc1 = audioCtx.createOscillator();
-            const gain1 = audioCtx.createGain();
-            osc1.type = 'sine';
-            osc1.frequency.setValueAtTime(frequency, audioCtx.currentTime);
+            // Progres global dari 0% ke 100% (0.0 sampai 1.0)
+            const progress = currentProgressPercentage / 100;
             
-            // 2. Karakter ketukan (Triangle wave untuk efek kayu/custom keycap)
-            const osc2 = audioCtx.createOscillator();
-            const gain2 = audioCtx.createGain();
-            osc2.type = 'triangle';
-            osc2.frequency.setValueAtTime(frequency * 1.5, audioCtx.currentTime); // Harmoni ke-5
+            // Frekuensi dasar untuk getaran PCB/plate bottom-out (180Hz ke 380Hz)
+            const bottomFreq = 180 + progress * 200;
+            // Frekuensi utama untuk clack plastik switch (600Hz ke 1400Hz)
+            const clackFreq = 600 + progress * 800;
 
-            // Filter Lowpass untuk meredam clack cempreng frekuensi tinggi agar suara thocky/berisi
-            const filter = audioCtx.createBiquadFilter();
-            filter.type = 'lowpass';
-            filter.frequency.setValueAtTime(frequency * 2.8, audioCtx.currentTime);
-            filter.Q.setValueAtTime(2.5, audioCtx.currentTime);
-
-            // Envelope decay ketukan cepat (snappy thock)
-            const decayTime = 0.08 + (currentProgressPercentage / 100) * 0.05; // 80ms sampai 130ms
+            // 1. Noise Transient (Gesekan plastik stem Cherry MX Red)
+            const noise = audioCtx.createBufferSource();
+            const noiseGain = audioCtx.createGain();
+            const noiseFilter = audioCtx.createBiquadFilter();
             
-            gain1.gain.setValueAtTime(0.45, audioCtx.currentTime);
-            gain1.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + decayTime);
+            // Buffer derau super singkat (10ms)
+            const bufferSize = audioCtx.sampleRate * 0.01;
+            const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+            noise.buffer = buffer;
             
-            gain2.gain.setValueAtTime(0.15, audioCtx.currentTime);
-            gain2.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + decayTime * 0.6);
-
-            // Koneksi node audio
-            osc1.connect(filter);
-            osc2.connect(filter);
+            noiseFilter.type = 'bandpass';
+            noiseFilter.frequency.setValueAtTime(clackFreq * 1.6, audioCtx.currentTime);
+            noiseFilter.Q.setValueAtTime(4, audioCtx.currentTime);
             
-            const mainGain = audioCtx.createGain();
-            mainGain.gain.setValueAtTime(1.0, audioCtx.currentTime);
+            noiseGain.gain.setValueAtTime(0.06, audioCtx.currentTime);
+            noiseGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.008);
             
-            filter.connect(mainGain);
-            mainGain.connect(audioCtx.destination);
+            noise.connect(noiseFilter);
+            noiseFilter.connect(noiseGain);
+            noiseGain.connect(audioCtx.destination);
 
-            osc1.start();
-            osc2.start();
-            osc1.stop(audioCtx.currentTime + decayTime + 0.02);
-            osc2.stop(audioCtx.currentTime + decayTime + 0.02);
+            // 2. Plastic Clack (Triangle wave - bodi plastik stem switch Cherry MX Red)
+            const oscClack = audioCtx.createOscillator();
+            const clackGain = audioCtx.createGain();
+            const clackFilter = audioCtx.createBiquadFilter();
+            
+            oscClack.type = 'triangle';
+            oscClack.frequency.setValueAtTime(clackFreq, audioCtx.currentTime);
+            oscClack.frequency.exponentialRampToValueAtTime(clackFreq * 0.85, audioCtx.currentTime + 0.015);
+            
+            clackFilter.type = 'lowpass';
+            clackFilter.frequency.setValueAtTime(clackFreq * 2.2, audioCtx.currentTime);
+            clackFilter.Q.setValueAtTime(2.0, audioCtx.currentTime);
+            
+            clackGain.gain.setValueAtTime(0.35, audioCtx.currentTime);
+            clackGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.018);
+            
+            oscClack.connect(clackFilter);
+            clackFilter.connect(clackGain);
+            clackGain.connect(audioCtx.destination);
 
-            // 3. Efek hentakan keyboard kayu mekanik lirih (click transient)
-            const clickOsc = audioCtx.createOscillator();
-            const clickGain = audioCtx.createGain();
-            clickOsc.type = 'sine';
-            clickOsc.frequency.setValueAtTime(frequency * 2.2, audioCtx.currentTime);
-            clickOsc.frequency.exponentialRampToValueAtTime(frequency * 0.6, audioCtx.currentTime + 0.02);
-            clickGain.gain.setValueAtTime(0.12, audioCtx.currentTime);
-            clickGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.02);
-            clickOsc.connect(clickGain);
-            clickGain.connect(audioCtx.destination);
-            clickOsc.start();
-            clickOsc.stop(audioCtx.currentTime + 0.025);
+            // 3. Housing Bottom-Out (Sine wave - pantulan PCB/Plate keyboard kayu)
+            const oscBottom = audioCtx.createOscillator();
+            const bottomGain = audioCtx.createGain();
+            
+            oscBottom.type = 'sine';
+            oscBottom.frequency.setValueAtTime(bottomFreq, audioCtx.currentTime);
+            oscBottom.frequency.exponentialRampToValueAtTime(bottomFreq * 0.7, audioCtx.currentTime + 0.035);
+            
+            bottomGain.gain.setValueAtTime(0.18, audioCtx.currentTime);
+            bottomGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.038);
+            
+            oscBottom.connect(bottomGain);
+            bottomGain.connect(audioCtx.destination);
+
+            // Start & Stop
+            noise.start();
+            oscClack.start();
+            oscBottom.start();
+            
+            oscClack.stop(audioCtx.currentTime + 0.025);
+            oscBottom.stop(audioCtx.currentTime + 0.045);
         }
 
         function playSuccessSound() {
