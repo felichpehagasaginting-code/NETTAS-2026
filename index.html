@@ -1339,6 +1339,11 @@
             }
         };
 
+        // Fitur 3: Tombol reset di modal kemenangan memicu verifikasi PIN admin
+        window.resetSystem = () => {
+            openAdminPin();
+        };
+
         function initVisualizer() {
             source = audioCtx.createMediaElementSource(bgMusic);
             analyser = audioCtx.createAnalyser();
