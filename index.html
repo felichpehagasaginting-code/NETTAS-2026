@@ -96,6 +96,316 @@
             user-select: none;
         }
 
+        /* --- Intro Overlay (Fitur 1) --- */
+        .intro-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 99999;
+            background: radial-gradient(ellipse at center, #0d0015 0%, #020202 70%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            transition: opacity 1s ease, visibility 1s ease;
+        }
+        .intro-overlay.fade-out {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+        .intro-content {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            padding: 2rem;
+            max-width: 480px;
+        }
+        .intro-logo-glow {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(191,0,255,0.4) 0%, transparent 70%);
+            border: 1px solid rgba(191,0,255,0.5);
+            animation: intro-pulse 2s ease-in-out infinite;
+            position: relative;
+        }
+        .intro-logo-glow::after {
+            content: '⬡';
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: var(--primary-neon);
+            text-shadow: 0 0 20px var(--primary-neon), 0 0 40px var(--secondary-neon);
+            animation: intro-spin 10s linear infinite;
+        }
+        @keyframes intro-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes intro-pulse {
+            0%, 100% { box-shadow: 0 0 20px rgba(191,0,255,0.3), 0 0 60px rgba(191,0,255,0.1); }
+            50% { box-shadow: 0 0 40px rgba(191,0,255,0.6), 0 0 100px rgba(191,0,255,0.2); }
+        }
+        .intro-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: clamp(2rem, 8vw, 3rem);
+            font-weight: 800;
+            letter-spacing: 0.5rem;
+            text-transform: uppercase;
+            color: #fff;
+            text-shadow: 0 0 20px var(--primary-neon), 0 0 40px var(--secondary-neon);
+            animation: flicker 4s linear infinite;
+        }
+        .intro-subtitle {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: clamp(0.8rem, 3vw, 1rem);
+            font-weight: 700;
+            letter-spacing: 0.4rem;
+            text-transform: uppercase;
+            color: var(--primary-neon);
+        }
+        .intro-desc {
+            font-family: 'Outfit', sans-serif;
+            font-size: clamp(0.7rem, 2.5vw, 0.85rem);
+            color: rgba(255,255,255,0.4);
+            letter-spacing: 0.1rem;
+            line-height: 1.6;
+        }
+        .init-system-btn {
+            margin-top: 1.5rem;
+            background: transparent;
+            color: var(--primary-neon);
+            border: 1.5px solid var(--primary-neon);
+            padding: 1rem 2.5rem;
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700;
+            border-radius: 10px;
+            cursor: pointer;
+            letter-spacing: 0.2rem;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 20px rgba(191,0,255,0.2), inset 0 0 20px rgba(191,0,255,0.05);
+            position: relative;
+            overflow: hidden;
+        }
+        .init-system-btn::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(191,0,255,0.2), transparent);
+            transition: left 0.5s ease;
+        }
+        .init-system-btn:hover::before { left: 100%; }
+        .init-system-btn:hover {
+            background: rgba(191,0,255,0.15);
+            box-shadow: 0 0 40px rgba(191,0,255,0.5), inset 0 0 30px rgba(191,0,255,0.1);
+            transform: scale(1.05);
+        }
+        .init-system-btn:active { transform: scale(0.97); }
+        .intro-scan-line {
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--primary-neon), transparent);
+            animation: scan-sweep 3s linear infinite;
+            opacity: 0.7;
+        }
+        @keyframes scan-sweep {
+            from { transform: translateY(0); }
+            to { transform: translateY(100vh); }
+        }
+
+        /* --- Status Dot Animation --- */
+        .status-dot {
+            width: 8px; height: 8px;
+            background: var(--primary-neon);
+            border-radius: 50%;
+            animation: blink-dot 1.5s ease-in-out infinite;
+        }
+        @keyframes blink-dot {
+            0%, 100% { opacity: 1; box-shadow: 0 0 6px var(--primary-neon); }
+            50% { opacity: 0.3; box-shadow: none; }
+        }
+        .online-status { cursor: pointer; }
+        .online-status:hover { border-color: var(--accent-neon); }
+
+        /* --- Admin Panel (Fitur 3) --- */
+        .admin-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            z-index: 50000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(8px);
+        }
+        .admin-overlay.show { display: flex; animation: fadeIn 0.3s ease; }
+        .admin-modal {
+            background: linear-gradient(135deg, rgba(20,0,40,0.97), rgba(5,0,15,0.97));
+            border: 1px solid rgba(191,0,255,0.4);
+            border-radius: 20px;
+            padding: 2rem;
+            width: min(90vw, 420px);
+            box-shadow: 0 0 60px rgba(191,0,255,0.2), inset 0 0 40px rgba(191,0,255,0.05);
+            font-family: 'Space Grotesk', sans-serif;
+        }
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(191,0,255,0.2);
+        }
+        .admin-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--primary-neon);
+            letter-spacing: 0.3rem;
+            text-transform: uppercase;
+        }
+        .admin-close {
+            background: none;
+            border: 1px solid rgba(255,255,255,0.2);
+            color: rgba(255,255,255,0.6);
+            width: 32px; height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1rem;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s;
+        }
+        .admin-close:hover { border-color: #ff4444; color: #ff4444; }
+        .admin-section {
+            margin-bottom: 1.2rem;
+        }
+        .admin-section-label {
+            font-size: 0.65rem;
+            font-weight: 700;
+            color: rgba(255,255,255,0.4);
+            letter-spacing: 0.2rem;
+            text-transform: uppercase;
+            margin-bottom: 0.6rem;
+        }
+        .admin-input {
+            width: 100%;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(191,0,255,0.25);
+            border-radius: 8px;
+            color: #fff;
+            padding: 0.7rem 1rem;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.9rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .admin-input:focus { border-color: var(--primary-neon); }
+        .admin-btn {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border-radius: 10px;
+            border: none;
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700;
+            font-size: 0.8rem;
+            letter-spacing: 0.15rem;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .admin-btn-primary {
+            background: var(--primary-neon);
+            color: #000;
+        }
+        .admin-btn-primary:hover { box-shadow: 0 0 20px var(--primary-neon); transform: scale(1.02); }
+        .admin-btn-danger {
+            background: transparent;
+            border: 1px solid #ff4444;
+            color: #ff4444;
+        }
+        .admin-btn-danger:hover { background: rgba(255,68,68,0.1); box-shadow: 0 0 15px rgba(255,68,68,0.3); }
+        .admin-btn-success {
+            background: transparent;
+            border: 1px solid #00e5a0;
+            color: #00e5a0;
+        }
+        .admin-btn-success:hover { background: rgba(0,229,160,0.1); box-shadow: 0 0 15px rgba(0,229,160,0.3); }
+        .admin-status-msg {
+            font-size: 0.7rem;
+            text-align: center;
+            padding: 0.5rem;
+            border-radius: 6px;
+            margin-top: 0.5rem;
+            display: none;
+        }
+        .admin-status-msg.success { background: rgba(0,229,160,0.1); color: #00e5a0; border: 1px solid rgba(0,229,160,0.3); display: block; }
+        .admin-status-msg.error { background: rgba(255,68,68,0.1); color: #ff4444; border: 1px solid rgba(255,68,68,0.3); display: block; }
+        .admin-divider { border: none; border-top: 1px solid rgba(255,255,255,0.07); margin: 1rem 0; }
+        .admin-pin-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.85);
+            z-index: 60000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+        }
+        .admin-pin-overlay.show { display: flex; animation: fadeIn 0.3s ease; }
+        .admin-pin-box {
+            background: linear-gradient(135deg, rgba(20,0,40,0.98), rgba(5,0,15,0.98));
+            border: 1px solid rgba(191,0,255,0.5);
+            border-radius: 20px;
+            padding: 2.5rem 2rem;
+            width: min(90vw, 360px);
+            text-align: center;
+            box-shadow: 0 0 60px rgba(191,0,255,0.3);
+            font-family: 'Space Grotesk', sans-serif;
+        }
+        .admin-pin-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        .admin-pin-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            letter-spacing: 0.3rem;
+            color: var(--primary-neon);
+            text-transform: uppercase;
+            margin-bottom: 0.4rem;
+        }
+        .admin-pin-desc {
+            font-size: 0.7rem;
+            color: rgba(255,255,255,0.4);
+            margin-bottom: 1.5rem;
+        }
+        .admin-pin-input {
+            width: 100%;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(191,0,255,0.3);
+            border-radius: 10px;
+            color: #fff;
+            padding: 0.9rem 1rem;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.2rem;
+            text-align: center;
+            letter-spacing: 0.3rem;
+            outline: none;
+            margin-bottom: 1rem;
+        }
+        .admin-pin-input:focus { border-color: var(--primary-neon); box-shadow: 0 0 15px rgba(191,0,255,0.2); }
+        .admin-pin-error {
+            font-size: 0.7rem;
+            color: #ff4444;
+            margin-bottom: 0.8rem;
+            min-height: 1rem;
+        }
+
         .bg-festive {
             background: linear-gradient(-45deg, #ff007f, #7928ca, #00e5ff, #bf00ff) !important;
             background-size: 400% 400% !important;
@@ -594,6 +904,62 @@
 </head>
 <body>
 
+    <!-- ===== INTRO OVERLAY (Fitur 1) ===== -->
+    <div id="intro-overlay" class="intro-overlay">
+        <div class="intro-scan-line"></div>
+        <div class="intro-content">
+            <div class="intro-logo-glow"></div>
+            <h2 class="intro-title">NETTAS 2026</h2>
+            <p class="intro-subtitle">Digital Awakening</p>
+            <p class="intro-desc">Sistem Sinkronisasi Kolaboratif Node Festival<br>Semua energi terhubung. Semua peserta menyatu.</p>
+            <button class="init-system-btn" id="btn-enter-system">⚡ INITIALIZE CONNECTION</button>
+        </div>
+    </div>
+
+    <!-- ===== ADMIN PIN OVERLAY (Fitur 3) ===== -->
+    <div id="admin-pin-overlay" class="admin-pin-overlay">
+        <div class="admin-pin-box">
+            <div class="admin-pin-icon">🔐</div>
+            <p class="admin-pin-title">ADMIN ACCESS</p>
+            <p class="admin-pin-desc">Masukkan sandi administrator untuk melanjutkan</p>
+            <input type="password" id="admin-pin-input" class="admin-pin-input" placeholder="••••••••" maxlength="32">
+            <p class="admin-pin-error" id="admin-pin-error"></p>
+            <button class="admin-btn admin-btn-primary" id="btn-admin-pin-confirm" style="margin-bottom: 0.7rem;">VERIFIKASI</button>
+            <button class="admin-btn" id="btn-admin-pin-cancel" style="background: none; border: 1px solid rgba(255,255,255,0.15); color: rgba(255,255,255,0.5);">BATAL</button>
+        </div>
+    </div>
+
+    <!-- ===== ADMIN MODAL (Fitur 3) ===== -->
+    <div id="admin-overlay" class="admin-overlay">
+        <div class="admin-modal">
+            <div class="admin-header">
+                <span class="admin-title">⚙ ADMIN PANEL</span>
+                <button class="admin-close" id="btn-admin-close">✕</button>
+            </div>
+
+            <div class="admin-section">
+                <p class="admin-section-label">🎯 Target Aktivasi Saat Ini</p>
+                <div style="display: flex; gap: 0.5rem;">
+                    <input type="number" id="admin-target-input" class="admin-input" placeholder="Contoh: 2026" min="1">
+                    <button class="admin-btn admin-btn-primary" id="btn-admin-set-target" style="width: auto; padding: 0.75rem 1.2rem; white-space: nowrap;">UPDATE</button>
+                </div>
+                <p class="admin-status-msg" id="msg-target"></p>
+            </div>
+
+            <hr class="admin-divider">
+
+            <div class="admin-section">
+                <p class="admin-section-label">⚠ Tindakan Berbahaya</p>
+                <button class="admin-btn admin-btn-danger" id="btn-admin-reset" style="margin-bottom: 0.7rem;">🔄 RESET SEMUA PROGRES → 0</button>
+                <button class="admin-btn admin-btn-success" id="btn-admin-force-win">🏆 FORCE VICTORY (100%)</button>
+                <p class="admin-status-msg" id="msg-action"></p>
+            </div>
+
+            <hr class="admin-divider">
+            <p style="font-size: 0.6rem; color: rgba(255,255,255,0.2); text-align: center; letter-spacing: 0.1rem;">NETTAS 2026 · ADMIN PANEL v1.0</p>
+        </div>
+    </div>
+
 
     <div class="scanlines"></div>
     <div class="vignette"></div>
@@ -626,7 +992,7 @@
     <header>
         <div class="data-stream" style="left: 10px; animation-duration: 15s;">SYSTEM_ONLINE_NODE_ACTIVE_SYNCING_DATA_STREAM</div>
         <div class="data-stream" style="right: 10px; animation-duration: 25s;">NETTAS_2026_PROTOCOL_X7_INITIALIZING_RESOURCES</div>
-        <div class="online-status">
+        <div class="online-status" id="admin-trigger" title="">
             <div class="status-dot"></div>
             <span id="presence-count">1</span> NODE CONNECTED
         </div>
@@ -691,17 +1057,34 @@
         const clicksRef = ref(db, 'global_clicks');
         const presenceRef = ref(db, 'presence');
         const connectedRef = ref(db, '.info/connected');
+        const configRef = ref(db, 'config/target_clicks'); // Fitur 2: Referensi target dinamis
 
-        window.resetSystem = () => {
-            if (confirm("Apakah Anda yakin ingin me-reset seluruh progres aktivasi global kembali ke 0?")) {
-                set(clicksRef, 0);
-                location.reload();
-            }
-        };
-
-        const TARGET = 200;
+        // Fitur 2: TARGET sekarang dinamis dari Firebase, default ke 2026
+        let TARGET = 2026;
+        let currentCount = 0;
         let isFinished = false;
         let currentProgressPercentage = 0;
+
+        // =====================================================================
+        // FITUR 1: INTRO OVERLAY & AUDIO INITIALIZATION
+        // =====================================================================
+        const introOverlay = document.getElementById('intro-overlay');
+        const btnEnter = document.getElementById('btn-enter-system');
+
+        btnEnter.addEventListener('click', async () => {
+            // Aktifkan AudioContext (solusi untuk browser blocking autoplay)
+            if (audioCtx.state === 'suspended') {
+                await audioCtx.resume();
+            }
+            // Putar musik latar secara langsung setelah gesture pertama
+            if (!visualizerInited) initVisualizer();
+            bgMusic.play().catch(e => console.warn('Music autoplay was blocked:', e));
+            document.getElementById('music-status').innerText = 'MUSIC: ON';
+
+            // Transisi keluar intro overlay
+            introOverlay.classList.add('fade-out');
+            setTimeout(() => { introOverlay.style.display = 'none'; }, 1100);
+        });
 
 
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -852,17 +1235,160 @@
         });
 
         onValue(clicksRef, (snap) => {
-            updateUI(snap.val() || 0);
+            currentCount = snap.val() || 0;
+            updateUI(currentCount);
+        });
+
+        // =====================================================================
+        // FITUR 2: LISTENER TARGET DINAMIS DARI FIREBASE
+        // =====================================================================
+        onValue(configRef, (snap) => {
+            const newTarget = snap.val();
+            if (newTarget && typeof newTarget === 'number' && newTarget > 0) {
+                TARGET = newTarget;
+                // Inisialisasi nilai target di admin panel jika sudah ada
+                const adminTargetInput = document.getElementById('admin-target-input');
+                if (adminTargetInput && !adminTargetInput.value) adminTargetInput.placeholder = `Saat ini: ${newTarget}`;
+                // Refresh UI dengan target baru
+                updateUI(currentCount);
+            }
         });
 
         function updateUI(count) {
             currentProgressPercentage = Math.min((count / TARGET) * 100, 100);
-            document.getElementById('tap-val').innerText = count.toLocaleString();
+            // Format tap-val menjadi "count / TARGET"
+            document.getElementById('tap-val').innerText = count.toLocaleString() + ' / ' + TARGET.toLocaleString();
             document.getElementById('percent-val').innerText = Math.floor(currentProgressPercentage) + '%';
             document.getElementById('progress-bar').style.width = currentProgressPercentage + '%';
             document.getElementById('liquid-fill-img').style.clipPath = `inset(${100 - currentProgressPercentage}% 0 0 0)`;
             if (currentProgressPercentage >= 100 && !isFinished) win();
         }
+
+        // =====================================================================
+        // FITUR 3: ADMIN PANEL — SHA-256 HASH VERIFICATION
+        // =====================================================================
+        // Sandi default: nettastrpl
+        // Untuk mengganti sandi: hitung SHA-256 dari sandi baru lalu ganti ADMIN_HASH di bawah.
+        // Tool online: https://emn178.github.io/online-tools/sha256.html
+        const ADMIN_HASH = '858ec7507d52048a43a9ac6fc09b39ed8180a626d8add7785dcca01caf77272d';
+
+        async function sha256(message) {
+            const msgBuffer = new TextEncoder().encode(message);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        // Trigger: double-click pada status online
+        let adminClickCount = 0, adminClickTimer = null;
+        document.getElementById('admin-trigger').addEventListener('click', () => {
+            adminClickCount++;
+            if (adminClickCount === 1) {
+                adminClickTimer = setTimeout(() => { adminClickCount = 0; }, 500);
+            } else if (adminClickCount >= 2) {
+                clearTimeout(adminClickTimer);
+                adminClickCount = 0;
+                openAdminPin();
+            }
+        });
+
+        function openAdminPin() {
+            document.getElementById('admin-pin-overlay').classList.add('show');
+            document.getElementById('admin-pin-input').value = '';
+            document.getElementById('admin-pin-error').textContent = '';
+            setTimeout(() => document.getElementById('admin-pin-input').focus(), 100);
+        }
+
+        document.getElementById('admin-pin-input').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') document.getElementById('btn-admin-pin-confirm').click();
+        });
+
+        document.getElementById('btn-admin-pin-confirm').addEventListener('click', async () => {
+            const pinInput = document.getElementById('admin-pin-input').value.trim();
+            if (!pinInput) return;
+            const hash = await sha256(pinInput);
+            if (hash === ADMIN_HASH) {
+                document.getElementById('admin-pin-overlay').classList.remove('show');
+                openAdminPanel();
+            } else {
+                const errEl = document.getElementById('admin-pin-error');
+                errEl.textContent = '⚠ Sandi salah. Akses ditolak.';
+                document.getElementById('admin-pin-input').value = '';
+                document.getElementById('admin-pin-input').focus();
+                setTimeout(() => { errEl.textContent = ''; }, 3000);
+            }
+        });
+
+        document.getElementById('btn-admin-pin-cancel').addEventListener('click', () => {
+            document.getElementById('admin-pin-overlay').classList.remove('show');
+        });
+
+        function openAdminPanel() {
+            // Tampilkan nilai target saat ini di input
+            document.getElementById('admin-target-input').value = TARGET;
+            clearAdminMessages();
+            document.getElementById('admin-overlay').classList.add('show');
+        }
+
+        document.getElementById('btn-admin-close').addEventListener('click', () => {
+            document.getElementById('admin-overlay').classList.remove('show');
+        });
+
+        function showAdminMsg(elId, message, type) {
+            const el = document.getElementById(elId);
+            el.textContent = message;
+            el.className = `admin-status-msg ${type}`;
+            setTimeout(() => { el.className = 'admin-status-msg'; el.textContent = ''; }, 4000);
+        }
+
+        function clearAdminMessages() {
+            ['msg-target', 'msg-action'].forEach(id => {
+                const el = document.getElementById(id);
+                el.className = 'admin-status-msg'; el.textContent = '';
+            });
+        }
+
+        // Tombol: Update Target
+        document.getElementById('btn-admin-set-target').addEventListener('click', () => {
+            const newTarget = parseInt(document.getElementById('admin-target-input').value);
+            if (isNaN(newTarget) || newTarget < 1) {
+                showAdminMsg('msg-target', '⚠ Masukkan angka target yang valid (min. 1).', 'error');
+                return;
+            }
+            set(configRef, newTarget)
+                .then(() => showAdminMsg('msg-target', `✓ Target diperbarui ke ${newTarget.toLocaleString()} klik.`, 'success'))
+                .catch(() => showAdminMsg('msg-target', '✗ Gagal memperbarui target. Cek koneksi.', 'error'));
+        });
+
+        // Tombol: Reset Progres
+        document.getElementById('btn-admin-reset').addEventListener('click', () => {
+            if (!confirm('⚠ Anda yakin ingin me-reset SEMUA progres aktivasi ke 0? Tindakan ini tidak dapat dibatalkan!')) return;
+            isFinished = false;
+            document.getElementById('victory-modal').classList.remove('show');
+            document.getElementById('strobe-layer').classList.remove('strobe-bg');
+            document.body.classList.remove('bg-festive');
+            set(clicksRef, 0)
+                .then(() => showAdminMsg('msg-action', '✓ Progres berhasil direset ke 0.', 'success'))
+                .catch(() => showAdminMsg('msg-action', '✗ Gagal melakukan reset. Cek koneksi.', 'error'));
+        });
+
+        // Tombol: Force Victory
+        document.getElementById('btn-admin-force-win').addEventListener('click', () => {
+            if (!confirm('🏆 Aktifkan mode kemenangan sekarang? Counter akan di-set ke nilai TARGET.')) return;
+            set(clicksRef, TARGET)
+                .then(() => {
+                    showAdminMsg('msg-action', '✓ Mode kemenangan diaktifkan!', 'success');
+                    document.getElementById('admin-overlay').classList.remove('show');
+                })
+                .catch(() => showAdminMsg('msg-action', '✗ Gagal. Cek koneksi.', 'error'));
+        });
+
+        // Tutup overlay admin jika klik di luar modal
+        document.getElementById('admin-overlay').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('admin-overlay')) {
+                document.getElementById('admin-overlay').classList.remove('show');
+            }
+        });
 
         document.getElementById('tap-action').addEventListener('pointerdown', (e) => {
             if (isFinished) return;

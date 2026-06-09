@@ -1,0 +1,26 @@
+{
+  "rules": {
+
+    ".read": true,
+
+    "global_clicks": {
+      ".read": true,
+      ".write": "newData.isNumber() && newData.val() >= 0"
+    },
+
+    "config": {
+      ".read": true,
+      "target_clicks": {
+        ".write": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 999999"
+      }
+    },
+
+    "presence": {
+      ".read": true,
+      "$node_id": {
+        ".write": "(!newData.exists() || (newData.val() === true && $node_id.length > 0))"
+      }
+    }
+
+  }
+}
