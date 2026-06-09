@@ -1403,35 +1403,58 @@
             // Progres global dari 0% ke 100% (0.0 sampai 1.0)
             const progress = currentProgressPercentage / 100;
             
-            // Frekuensi dasar untuk getaran PCB/plate bottom-out (180Hz ke 380Hz)
-            const bottomFreq = 180 + progress * 200;
-            // Frekuensi utama untuk clack plastik switch (600Hz ke 1400Hz)
-            const clackFreq = 600 + progress * 800;
+            // Frekuensi click jacket snap (2200Hz ke 4200Hz)
+            const clickFreq = 2200 + progress * 2000;
+            // Frekuensi utama untuk clack plastik switch (450Hz ke 900Hz)
+            const clackFreq = 450 + progress * 450;
+            // Frekuensi dasar untuk getaran PCB/plate bottom-out (130Hz ke 260Hz)
+            const bottomFreq = 130 + progress * 130;
 
-            // 1. Noise Transient (Gesekan plastik stem Cherry MX Red)
+            // 1. Click Jacket Snap (Metallic Click - High Frequency Resonant Transient)
+            const oscClick = audioCtx.createOscillator();
+            const clickGain = audioCtx.createGain();
+            const clickFilter = audioCtx.createBiquadFilter();
+
+            oscClick.type = 'triangle';
+            oscClick.frequency.setValueAtTime(clickFreq, audioCtx.currentTime);
+            oscClick.frequency.exponentialRampToValueAtTime(clickFreq * 1.1, audioCtx.currentTime + 0.005);
+
+            clickFilter.type = 'bandpass';
+            clickFilter.frequency.setValueAtTime(clickFreq, audioCtx.currentTime);
+            clickFilter.Q.setValueAtTime(12, audioCtx.currentTime); // High Q for sharp metallic click sound
+
+            clickGain.gain.setValueAtTime(0.45, audioCtx.currentTime);
+            clickGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.006);
+
+            oscClick.connect(clickFilter);
+            clickFilter.connect(clickGain);
+            clickGain.connect(audioCtx.destination);
+
+            // 2. High Frequency Crisp Noise Transient (Tactile snap feel)
             const noise = audioCtx.createBufferSource();
             const noiseGain = audioCtx.createGain();
             const noiseFilter = audioCtx.createBiquadFilter();
             
-            // Buffer derau super singkat (10ms)
-            const bufferSize = audioCtx.sampleRate * 0.01;
+            const bufferSize = audioCtx.sampleRate * 0.006;
             const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
             const data = buffer.getChannelData(0);
-            for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+            for (let i = 0; i < bufferSize; i++) {
+                data[i] = Math.random() * 2 - 1;
+            }
             noise.buffer = buffer;
             
-            noiseFilter.type = 'bandpass';
-            noiseFilter.frequency.setValueAtTime(clackFreq * 1.6, audioCtx.currentTime);
-            noiseFilter.Q.setValueAtTime(4, audioCtx.currentTime);
+            noiseFilter.type = 'highpass';
+            noiseFilter.frequency.setValueAtTime(clickFreq * 0.95, audioCtx.currentTime);
+            noiseFilter.Q.setValueAtTime(3.0, audioCtx.currentTime);
             
-            noiseGain.gain.setValueAtTime(0.06, audioCtx.currentTime);
-            noiseGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.008);
+            noiseGain.gain.setValueAtTime(0.18, audioCtx.currentTime);
+            noiseGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.006);
             
             noise.connect(noiseFilter);
             noiseFilter.connect(noiseGain);
             noiseGain.connect(audioCtx.destination);
 
-            // 2. Plastic Clack (Triangle wave - bodi plastik stem switch Cherry MX Red)
+            // 3. Plastic Clack (Triangle wave - stem bottom-out)
             const oscClack = audioCtx.createOscillator();
             const clackGain = audioCtx.createGain();
             const clackFilter = audioCtx.createBiquadFilter();
@@ -1441,17 +1464,17 @@
             oscClack.frequency.exponentialRampToValueAtTime(clackFreq * 0.85, audioCtx.currentTime + 0.015);
             
             clackFilter.type = 'lowpass';
-            clackFilter.frequency.setValueAtTime(clackFreq * 2.2, audioCtx.currentTime);
-            clackFilter.Q.setValueAtTime(2.0, audioCtx.currentTime);
+            clackFilter.frequency.setValueAtTime(clackFreq * 2.0, audioCtx.currentTime);
+            clackFilter.Q.setValueAtTime(1.5, audioCtx.currentTime);
             
-            clackGain.gain.setValueAtTime(0.35, audioCtx.currentTime);
+            clackGain.gain.setValueAtTime(0.25, audioCtx.currentTime);
             clackGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.018);
             
             oscClack.connect(clackFilter);
             clackFilter.connect(clackGain);
             clackGain.connect(audioCtx.destination);
 
-            // 3. Housing Bottom-Out (Sine wave - pantulan PCB/Plate keyboard kayu)
+            // 4. Housing Bottom-Out (Sine wave - deep wood/plate thock resonance)
             const oscBottom = audioCtx.createOscillator();
             const bottomGain = audioCtx.createGain();
             
@@ -1459,17 +1482,19 @@
             oscBottom.frequency.setValueAtTime(bottomFreq, audioCtx.currentTime);
             oscBottom.frequency.exponentialRampToValueAtTime(bottomFreq * 0.7, audioCtx.currentTime + 0.035);
             
-            bottomGain.gain.setValueAtTime(0.18, audioCtx.currentTime);
+            bottomGain.gain.setValueAtTime(0.15, audioCtx.currentTime);
             bottomGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.038);
             
             oscBottom.connect(bottomGain);
             bottomGain.connect(audioCtx.destination);
 
-            // Start & Stop
+            // Start & Stop all sound sources
             noise.start();
+            oscClick.start();
             oscClack.start();
             oscBottom.start();
             
+            oscClick.stop(audioCtx.currentTime + 0.01);
             oscClack.stop(audioCtx.currentTime + 0.025);
             oscBottom.stop(audioCtx.currentTime + 0.045);
         }
