@@ -876,6 +876,171 @@
         .bottom-left { bottom: 20px; left: 20px; border-right: none; border-top: none; }
         .bottom-right { bottom: 20px; right: 20px; border-left: none; border-top: none; }
 
+        /* --- Hype Speed (Fitur 1) --- */
+        .hype-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.1rem;
+            color: rgba(255, 255, 255, 0.4);
+            transition: all 0.3s;
+        }
+        .hype-value {
+            color: var(--accent-neon);
+            text-shadow: 0 0 10px var(--accent-neon);
+        }
+        
+        /* Hype Mode Active Styles */
+        .hype-active #logo-container {
+            animation: logo-shake-glow 0.5s infinite alternate;
+        }
+        .hype-active .bar-inner {
+            background: linear-gradient(90deg, var(--accent-neon), #fff, var(--accent-neon)) !important;
+            box-shadow: 0 0 25px var(--accent-neon) !important;
+        }
+        @keyframes logo-shake-glow {
+            0% { transform: scale(1) rotate(0deg); filter: drop-shadow(0 0 15px var(--accent-neon)) saturate(1.5); }
+            50% { transform: scale(1.05) rotate(1deg); filter: drop-shadow(0 0 35px var(--primary-neon)) saturate(2); }
+            100% { transform: scale(1) rotate(-1deg); filter: drop-shadow(0 0 15px var(--accent-neon)) saturate(1.5); }
+        }
+
+        /* --- Live Leaderboard Panel (Fitur 4) --- */
+        .leaderboard-panel {
+            position: fixed;
+            top: 80px;
+            left: 20px;
+            width: 220px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(191, 0, 255, 0.1);
+            border-radius: 16px;
+            padding: 1rem;
+            backdrop-filter: blur(15px);
+            z-index: 900;
+            font-family: 'Space Grotesk', sans-serif;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 0 15px rgba(255, 255, 255, 0.02);
+            transition: all 0.3s ease;
+        }
+        @media (max-width: 900px) {
+            .leaderboard-panel {
+                position: relative;
+                top: 0; left: 0;
+                width: 100%;
+                max-width: min(90vw, 360px);
+                margin: 0.5rem 0;
+                order: 3;
+            }
+        }
+        .leaderboard-header {
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.2rem;
+            color: var(--primary-neon);
+            text-transform: uppercase;
+            margin-bottom: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            border-bottom: 1px solid rgba(191, 0, 255, 0.15);
+            padding-bottom: 0.4rem;
+        }
+        .leaderboard-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        .leaderboard-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.7);
+            padding: 0.3rem 0.5rem;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.01);
+            border-left: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        .leaderboard-item.is-me {
+            background: rgba(191, 0, 255, 0.08);
+            border-left: 2px solid var(--primary-neon);
+            color: #fff;
+            font-weight: bold;
+        }
+        .leaderboard-name {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 110px;
+        }
+        .leaderboard-val {
+            font-family: monospace;
+            color: var(--accent-neon);
+        }
+
+        /* --- Milestone Overlay (Fitur 9) --- */
+        .milestone-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 10000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(8px);
+            pointer-events: none;
+            transition: all 0.5s ease;
+        }
+        .milestone-overlay.show {
+            display: flex;
+            animation: fadeIn 0.3s forwards;
+        }
+        .milestone-box {
+            text-align: center;
+            font-family: 'Space Grotesk', sans-serif;
+            padding: 2.5rem;
+            border-radius: 24px;
+            border: 1px solid var(--primary-neon);
+            background: linear-gradient(135deg, rgba(20, 0, 40, 0.95), rgba(5, 0, 15, 0.95));
+            box-shadow: 0 0 50px rgba(191, 0, 255, 0.4);
+            max-width: 90vw;
+            width: 380px;
+            transform: scale(0.7);
+            opacity: 0;
+            transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .milestone-overlay.show .milestone-box {
+            transform: scale(1);
+            opacity: 1;
+        }
+        .milestone-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            animation: pulseContinuous 1s infinite alternate;
+        }
+        .milestone-alert {
+            font-size: 0.65rem;
+            font-weight: 700;
+            color: var(--accent-neon);
+            letter-spacing: 0.3rem;
+            text-transform: uppercase;
+            margin-bottom: 0.5rem;
+        }
+        .milestone-title {
+            font-size: 1.5rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: #fff;
+            text-shadow: 0 0 15px var(--primary-neon);
+            letter-spacing: 0.2rem;
+            line-height: 1.2;
+        }
+
         .screen-flash {
             position: fixed;
             inset: 0;
@@ -904,7 +1069,7 @@
 </head>
 <body>
 
-    <!-- ===== INTRO OVERLAY (Fitur 1) ===== -->
+    <!-- ===== INTRO OVERLAY (Fitur 1 & 3) ===== -->
     <div id="intro-overlay" class="intro-overlay">
         <div class="intro-scan-line"></div>
         <div class="intro-content">
@@ -912,7 +1077,9 @@
             <h2 class="intro-title">NETTAS 2026</h2>
             <p class="intro-subtitle">Digital Awakening</p>
             <p class="intro-desc">Sistem Sinkronisasi Kolaboratif Node Festival<br>Semua energi terhubung. Semua peserta menyatu.</p>
-            <button class="init-system-btn" id="btn-enter-system">⚡ INITIALIZE CONNECTION</button>
+            
+            <input type="text" id="node-name-input" class="admin-input" placeholder="MASUKKAN NAMA NODE ANDA" maxlength="12" style="margin-top: 1rem; text-align: center; max-width: 260px; letter-spacing: 0.15rem; font-weight: 700; text-transform: uppercase;">
+            <button class="init-system-btn" id="btn-enter-system" style="margin-top: 1rem;">⚡ INITIALIZE CONNECTION</button>
         </div>
     </div>
 
@@ -989,6 +1156,14 @@
     <canvas id="canvas-bg"></canvas>
     <canvas id="visualizer"></canvas>
 
+    <!-- ===== LIVE LEADERBOARD PANEL (Fitur 4) ===== -->
+    <div class="leaderboard-panel" id="leaderboard-panel">
+        <div class="leaderboard-header">🏆 TOP ACTIVE NODES</div>
+        <ul class="leaderboard-list" id="leaderboard-list">
+            <li class="leaderboard-item"><span class="leaderboard-name">Connecting...</span></li>
+        </ul>
+    </div>
+
     <header>
         <div class="data-stream" style="left: 10px; animation-duration: 15s;">SYSTEM_ONLINE_NODE_ACTIVE_SYNCING_DATA_STREAM</div>
         <div class="data-stream" style="right: 10px; animation-duration: 25s;">NETTAS_2026_PROTOCOL_X7_INITIALIZING_RESOURCES</div>
@@ -1019,6 +1194,11 @@
         <div class="bar-outer">
             <div class="bar-inner" id="progress-bar"></div>
         </div>
+        
+        <!-- Hype Speed Container (Fitur 1) -->
+        <div class="hype-container">
+            ⚡ HYPE SPEED: <span class="hype-value" id="hype-speed-val">0</span> TAPS/S
+        </div>
     </div>
 
     <div class="btn-wrapper">
@@ -1037,10 +1217,19 @@
         </div>
     </div>
 
+    <!-- ===== MILESTONE OVERLAY (Fitur 9) ===== -->
+    <div class="milestone-overlay" id="milestone-overlay">
+        <div class="milestone-box">
+            <div class="milestone-icon" id="milestone-icon">⚡</div>
+            <p class="milestone-alert">SYSTEM UPGRADE</p>
+            <h3 class="milestone-title" id="milestone-title">GRID CONNECTED<br>25% CHARGED</h3>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, onValue, set, onDisconnect, runTransaction } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, onValue, set, onDisconnect, runTransaction, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDpBAqNdwlaJuYuVkHctQajZ88L9vNH2m8",
@@ -1057,21 +1246,62 @@
         const clicksRef = ref(db, 'global_clicks');
         const presenceRef = ref(db, 'presence');
         const connectedRef = ref(db, '.info/connected');
-        const configRef = ref(db, 'config/target_clicks'); // Fitur 2: Referensi target dinamis
+        const configRef = ref(db, 'config/target_clicks');
 
-        // Fitur 2: TARGET sekarang dinamis dari Firebase, default ke 2026
         let TARGET = 2026;
         let currentCount = 0;
         let isFinished = false;
         let currentProgressPercentage = 0;
 
+        // Fitur 3: Identitas Node Unik
+        let myNodeId = localStorage.getItem('nettas-node-id');
+        if (!myNodeId) {
+            myNodeId = 'node_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('nettas-node-id', myNodeId);
+        }
+        let myNodeName = localStorage.getItem('nettas-node-name') || '';
+
+        // Prefill input nama node
+        const nodeNameInput = document.getElementById('node-name-input');
+        if (nodeNameInput) {
+            nodeNameInput.value = myNodeName;
+        }
+
+        // Simpan personal clicks lokal untuk disinkronkan berkala
+        let myLocalClicks = 0;
+        let lastSyncClicks = 0;
+        let syncTimeout = null;
+
         // =====================================================================
-        // FITUR 1: INTRO OVERLAY & AUDIO INITIALIZATION
+        // FITUR 1 & 3: INTRO OVERLAY & AUDIO INITIALIZATION
         // =====================================================================
         const introOverlay = document.getElementById('intro-overlay');
         const btnEnter = document.getElementById('btn-enter-system');
 
         btnEnter.addEventListener('click', async () => {
+            // Ambil nama dari input atau buat default acak
+            let inputName = nodeNameInput.value.trim().toUpperCase();
+            if (!inputName) {
+                inputName = 'NODE_' + Math.floor(100 + Math.random() * 900);
+            }
+            myNodeName = inputName;
+            localStorage.setItem('nettas-node-name', myNodeName);
+
+            // Daftar ke database presensi dengan nama kustom
+            const myPresenceRef = ref(db, 'presence/' + myNodeId);
+            set(myPresenceRef, myNodeName);
+            onDisconnect(myPresenceRef).remove();
+
+            // Ambil click count personal dari database jika ada sebelumnya
+            const userClickRef = ref(db, `users/${myNodeId}`);
+            onValue(userClickRef, (snap) => {
+                const userData = snap.val();
+                if (userData) {
+                    myLocalClicks = userData.clicks || 0;
+                    lastSyncClicks = myLocalClicks;
+                }
+            }, { onlyOnce: true });
+
             // Aktifkan AudioContext (solusi untuk browser blocking autoplay)
             if (audioCtx.state === 'suspended') {
                 await audioCtx.resume();
@@ -1146,63 +1376,66 @@
 
         /* --- Cursor System Removed --- */
         
+        // Fitur 5: Collaborative Synthesizer Jam (A Minor Pentatonic Scale)
+        const PENTATONIC_SCALE = [
+            220.00, // A3
+            261.63, // C4
+            293.66, // D4
+            329.63, // E4
+            392.00, // G4
+            440.00, // A4
+            523.25, // C5
+            587.33, // D5
+            659.25, // E5
+            783.99, // G5
+            880.00  // A5
+        ];
+
         function playTapSound() {
             if (audioCtx.state === 'suspended') audioCtx.resume();
             
-            // Mechanical Keyboard Clack Effect
-            const osc1 = audioCtx.createOscillator(); // The "clack"
-            const osc2 = audioCtx.createOscillator(); // The "bottom out"
-            const noise = audioCtx.createBufferSource(); // The "friction"
-            const gain = audioCtx.createGain();
+            // Melodic pluck synthesizer mapped to Pentatonic scale
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            const filterNode = audioCtx.createBiquadFilter();
 
-            // Calculate pitch multiplier based on progress (up to 3x higher)
-            const pitchMultiplier = 1 + (currentProgressPercentage / 100) * 2;
+            // Tentukan nada harmonis berdasarkan click global
+            const noteIndex = currentCount % PENTATONIC_SCALE.length;
+            const frequency = PENTATONIC_SCALE[noteIndex];
 
-            // High frequency clack
-            osc1.type = 'triangle';
-            osc1.frequency.setValueAtTime(1200 * pitchMultiplier, audioCtx.currentTime);
-            osc1.frequency.exponentialRampToValueAtTime(100 * pitchMultiplier, audioCtx.currentTime + 0.05);
+            // Waveform type triangle agar terasa seperti pluck analog futuristik
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(frequency, audioCtx.currentTime);
 
-            // Low frequency bottom-out
-            osc2.type = 'sine';
-            osc2.frequency.setValueAtTime(150 * pitchMultiplier, audioCtx.currentTime);
-            osc2.frequency.exponentialRampToValueAtTime(40 * pitchMultiplier, audioCtx.currentTime + 0.1);
+            // Filter envelope untuk efek pluck "wah" cepat
+            filterNode.type = 'lowpass';
+            filterNode.Q.setValueAtTime(8, audioCtx.currentTime);
+            filterNode.frequency.setValueAtTime(frequency * 4, audioCtx.currentTime);
+            filterNode.frequency.exponentialRampToValueAtTime(frequency, audioCtx.currentTime + 0.15);
 
-            // White noise burst
-            const bufferSize = audioCtx.sampleRate * 0.05;
-            const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-            const data = buffer.getChannelData(0);
-            for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
-            noise.buffer = buffer;
+            // Gain envelope (Pluck decay)
+            gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.25);
 
-            gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
+            osc.connect(filterNode);
+            filterNode.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
 
-            osc1.connect(gain);
-            osc2.connect(gain);
-            noise.connect(gain);
-            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.3);
 
-            // Melodic ping that goes up in pitch
-            const osc3 = audioCtx.createOscillator();
-            const gain3 = audioCtx.createGain();
-            osc3.type = 'sine';
-            const baseFreq = 400 + (currentProgressPercentage / 100) * 800; // 400Hz to 1200Hz
-            osc3.frequency.setValueAtTime(baseFreq, audioCtx.currentTime);
-            gain3.gain.setValueAtTime(0.1, audioCtx.currentTime);
-            gain3.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.15);
-            osc3.connect(gain3);
-            gain3.connect(audioCtx.destination);
-
-            osc1.start();
-            osc2.start();
-            noise.start();
-            osc3.start();
-            
-            osc1.stop(audioCtx.currentTime + 0.1);
-            osc2.stop(audioCtx.currentTime + 0.1);
-            noise.stop(audioCtx.currentTime + 0.1);
-            osc3.stop(audioCtx.currentTime + 0.15);
+            // Tambahkan juga mechanical keyboard click effect sekunder yang lirih
+            const clickOsc = audioCtx.createOscillator();
+            const clickGain = audioCtx.createGain();
+            clickOsc.type = 'sine';
+            clickOsc.frequency.setValueAtTime(1000, audioCtx.currentTime);
+            clickOsc.frequency.exponentialRampToValueAtTime(150, audioCtx.currentTime + 0.03);
+            clickGain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+            clickGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.03);
+            clickOsc.connect(clickGain);
+            clickGain.connect(audioCtx.destination);
+            clickOsc.start();
+            clickOsc.stop(audioCtx.currentTime + 0.04);
         }
 
         function playSuccessSound() {
@@ -1223,10 +1456,10 @@
         }
 
         onValue(connectedRef, (snap) => {
-            if (snap.val() === true) {
-                const myPresence = ref(db, 'presence/' + Math.random().toString(36).substr(2, 9));
-                set(myPresence, true);
-                onDisconnect(myPresence).remove();
+            if (snap.val() === true && myNodeName) {
+                const myPresenceRef = ref(db, 'presence/' + myNodeId);
+                set(myPresenceRef, myNodeName);
+                onDisconnect(myPresenceRef).remove();
             }
         });
 
@@ -1254,6 +1487,72 @@
             }
         });
 
+        // Fitur 4: Listener Live Leaderboard Top 5
+        const topUsersQuery = query(ref(db, 'users'), orderByChild('clicks'), limitToLast(5));
+        onValue(topUsersQuery, (snap) => {
+            const users = [];
+            snap.forEach(child => {
+                users.push({ id: child.key, ...child.val() });
+            });
+            users.reverse(); // Urutan dari klik terbanyak ke terkecil
+
+            const listEl = document.getElementById('leaderboard-list');
+            if (listEl) {
+                listEl.innerHTML = '';
+                if (users.length === 0) {
+                    listEl.innerHTML = '<li class="leaderboard-item"><span class="leaderboard-name">Mulai Tapping!</span></li>';
+                }
+                users.forEach(u => {
+                    const li = document.createElement('li');
+                    li.className = 'leaderboard-item' + (u.id === myNodeId ? ' is-me' : '');
+                    li.innerHTML = `
+                        <span class="leaderboard-name">${u.name}</span>
+                        <span class="leaderboard-val">${(u.clicks || 0).toLocaleString()}</span>
+                    `;
+                    listEl.appendChild(li);
+                });
+            }
+        });
+
+        // Fitur 9: Pengingat Pencapaian Milestone
+        const displayedMilestones = new Set();
+
+        function triggerMilestoneEffect(percentage, title, icon) {
+            const overlay = document.getElementById('milestone-overlay');
+            const titleEl = document.getElementById('milestone-title');
+            const iconEl = document.getElementById('milestone-icon');
+            
+            iconEl.textContent = icon;
+            titleEl.innerHTML = title;
+            
+            overlay.classList.add('show');
+            
+            // Bunyi bass drop fiksi ilmiah
+            playMilestoneSound();
+
+            // Efek ledakan confetti meriah
+            confetti({ particleCount: 100, spread: 80, origin: { y: 0.6 }, zIndex: 11000 });
+
+            setTimeout(() => {
+                overlay.classList.remove('show');
+            }, 3000);
+        }
+
+        function playMilestoneSound() {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(120, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 1.2);
+            gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1.2);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 1.3);
+        }
+
         function updateUI(count) {
             currentProgressPercentage = Math.min((count / TARGET) * 100, 100);
             // Format tap-val menjadi "count / TARGET"
@@ -1261,7 +1560,27 @@
             document.getElementById('percent-val').innerText = Math.floor(currentProgressPercentage) + '%';
             document.getElementById('progress-bar').style.width = currentProgressPercentage + '%';
             document.getElementById('liquid-fill-img').style.clipPath = `inset(${100 - currentProgressPercentage}% 0 0 0)`;
-            if (currentProgressPercentage >= 100 && !isFinished) win();
+            
+            // Check Milestones (Fitur 9)
+            const floorProgress = Math.floor(currentProgressPercentage);
+            if (floorProgress >= 25 && floorProgress < 50 && !displayedMilestones.has(25)) {
+                displayedMilestones.add(25);
+                triggerMilestoneEffect(25, "GRID CONNECTED<br>25% CHARGED", "🔌");
+            } else if (floorProgress >= 50 && floorProgress < 75 && !displayedMilestones.has(50)) {
+                displayedMilestones.add(50);
+                triggerMilestoneEffect(50, "CORE SYNCHRONIZED<br>50% CHARGED", "🔄");
+            } else if (floorProgress >= 75 && floorProgress < 100 && !displayedMilestones.has(75)) {
+                displayedMilestones.add(75);
+                triggerMilestoneEffect(75, "OVERLOAD DETECTED<br>75% CAPACITY", "⚡");
+            }
+
+            if (currentProgressPercentage >= 100 && !isFinished) {
+                if (!displayedMilestones.has(100)) {
+                    displayedMilestones.add(100);
+                    triggerMilestoneEffect(100, "SYSTEM ONLINE<br>100% AWAKENED", "🏆");
+                }
+                win();
+            }
         }
 
         // =====================================================================
@@ -1364,9 +1683,14 @@
         document.getElementById('btn-admin-reset').addEventListener('click', () => {
             if (!confirm('⚠ Anda yakin ingin me-reset SEMUA progres aktivasi ke 0? Tindakan ini tidak dapat dibatalkan!')) return;
             isFinished = false;
+            displayedMilestones.clear(); // Bersihkan pelacak milestone agar bisa terpicu lagi
             document.getElementById('victory-modal').classList.remove('show');
             document.getElementById('strobe-layer').classList.remove('strobe-bg');
             document.body.classList.remove('bg-festive');
+            
+            // Bersihkan data kontribusi pengguna di database
+            set(ref(db, 'users'), null);
+
             set(clicksRef, 0)
                 .then(() => showAdminMsg('msg-action', '✓ Progres berhasil direset ke 0.', 'success'))
                 .catch(() => showAdminMsg('msg-action', '✗ Gagal melakukan reset. Cek koneksi.', 'error'));
@@ -1390,11 +1714,34 @@
             }
         });
 
+        // Buffer Sinkronisasi Tap Pengguna (Mencegah Overload Firebase)
+        function syncTapsToFirebase() {
+            if (myLocalClicks === lastSyncClicks) return;
+            const refPath = ref(db, `users/${myNodeId}`);
+            set(refPath, {
+                name: myNodeName,
+                clicks: myLocalClicks
+            }).then(() => {
+                lastSyncClicks = myLocalClicks;
+            }).catch(e => console.error("Error syncing personal taps:", e));
+        }
+
+        function queueTapsSync() {
+            if (syncTimeout) clearTimeout(syncTimeout);
+            syncTimeout = setTimeout(syncTapsToFirebase, 800); // Sync setelah 800ms tanpa ketikan
+        }
+
+        // Event: Tap Utama
         document.getElementById('tap-action').addEventListener('pointerdown', (e) => {
             if (isFinished) return;
             playTapSound();
             if (navigator.vibrate) navigator.vibrate(50);
+            
+            // Tambahkan klik personal dan global
+            myLocalClicks++;
             runTransaction(clicksRef, (curr) => (curr || 0) + 1);
+            queueTapsSync();
+
             createTapEffect(e.clientX, e.clientY);
             createShockwave(e.clientX, e.clientY);
             triggerImpact();
@@ -1414,7 +1761,7 @@
         function createTapEffect(x, y) {
             const el = document.createElement('div');
             el.className = 'tap-particle';
-            const texts = ['+1 NODE', 'SYNCING...', 'DATA_PUSH', 'LINKED', 'ACTIVE'];
+            const texts = [`+1 ${myNodeName}`, 'SYNCING...', 'DATA_PUSH', 'LINKED', 'ACTIVE'];
             el.innerText = texts[Math.floor(Math.random() * texts.length)];
             el.style.left = x + 'px';
             el.style.top = y + 'px';
@@ -1571,6 +1918,29 @@
         let pts = [];
         let currentCanvasColor = 'rgba(191, 0, 255, 0.3)';
 
+        // Fitur 1: Mengukur Hype Speed (Laju Tap Global) & Hype Mode Visual
+        let lastClicksCount = 0;
+        let lastVelocityTime = Date.now();
+        setInterval(() => {
+            const now = Date.now();
+            const timeDiffSec = (now - lastVelocityTime) / 1000;
+            if (timeDiffSec <= 0) return;
+
+            const clickDiff = currentCount - lastClicksCount;
+            const rawTapsPerSec = clickDiff >= 0 ? Math.round(clickDiff / timeDiffSec) : 0;
+            
+            document.getElementById('hype-speed-val').innerText = rawTapsPerSec;
+            
+            if (rawTapsPerSec >= 20) {
+                document.body.classList.add('hype-active');
+            } else {
+                document.body.classList.remove('hype-active');
+            }
+
+            lastClicksCount = currentCount;
+            lastVelocityTime = now;
+        }, 1000);
+
         function init() {
             canvas.width = window.innerWidth; canvas.height = window.innerHeight;
             pts = [];
@@ -1585,8 +1955,11 @@
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.fillStyle = currentCanvasColor;
+            
+            // Gandakan laju kecepatan partikel jika Hype Mode aktif
+            const speedMultiplier = document.body.classList.contains('hype-active') ? 4 : 1;
             pts.forEach(p => {
-                p.x += p.vx; p.y += p.vy;
+                p.x += p.vx * speedMultiplier; p.y += p.vy * speedMultiplier;
                 if(p.x<0) p.x=canvas.width; if(p.x>canvas.width) p.x=0;
                 if(p.y<0) p.y=canvas.height; if(p.y>canvas.height) p.y=0;
                 ctx.beginPath(); ctx.arc(p.x, p.y, p.s, 0, Math.PI*2); ctx.fill();

@@ -20,6 +20,13 @@
       "$node_id": {
         ".write": "(!newData.exists() || (newData.val() === true && $node_id.length > 0))"
       }
+    },
+
+    "users": {
+      "$node_id": {
+        ".read": true,
+        ".write": "!newData.exists() || (newData.child('clicks').isNumber() && newData.child('name').isString() && newData.child('clicks').val() >= data.child('clicks').val())"
+      }
     }
 
   }
