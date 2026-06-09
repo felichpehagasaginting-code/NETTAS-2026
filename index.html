@@ -1400,51 +1400,66 @@
         function playTapSound() {
             if (audioCtx.state === 'suspended') audioCtx.resume();
             
-            // Pengali pitch dinamis berdasarkan progres global (semakin mendekati 100%, nada dasar naik hingga 2.5x)
-            const pitchMultiplier = 1 + (currentProgressPercentage / 100) * 1.5;
+            // Frekuensi naik bersih dari 110Hz (A2 - deep bass thock) ke 660Hz (E5 - clean high pitch)
+            // Tanpa ada pengulangan atau penurunan nada, murni mengikuti progres bar global 0% - 100%
+            const baseFreq = 110;
+            const maxFreq = 660;
+            const frequency = baseFreq + (currentProgressPercentage / 100) * (maxFreq - baseFreq);
 
-            // Melodic pluck synthesizer mapped to Pentatonic scale
-            const osc = audioCtx.createOscillator();
-            const gainNode = audioCtx.createGain();
-            const filterNode = audioCtx.createBiquadFilter();
+            // 1. Bodi utama suara (Sine wave untuk thock bulat, deep, & bersih)
+            const osc1 = audioCtx.createOscillator();
+            const gain1 = audioCtx.createGain();
+            osc1.type = 'sine';
+            osc1.frequency.setValueAtTime(frequency, audioCtx.currentTime);
+            
+            // 2. Karakter ketukan (Triangle wave untuk efek kayu/custom keycap)
+            const osc2 = audioCtx.createOscillator();
+            const gain2 = audioCtx.createGain();
+            osc2.type = 'triangle';
+            osc2.frequency.setValueAtTime(frequency * 1.5, audioCtx.currentTime); // Harmoni ke-5
 
-            // Tentukan nada harmonis berdasarkan click global dan kalikan dengan pitchMultiplier
-            const noteIndex = currentCount % PENTATONIC_SCALE.length;
-            const frequency = PENTATONIC_SCALE[noteIndex] * pitchMultiplier;
+            // Filter Lowpass untuk meredam clack cempreng frekuensi tinggi agar suara thocky/berisi
+            const filter = audioCtx.createBiquadFilter();
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(frequency * 2.8, audioCtx.currentTime);
+            filter.Q.setValueAtTime(2.5, audioCtx.currentTime);
 
-            // Waveform type triangle agar terasa seperti pluck analog futuristik
-            osc.type = 'triangle';
-            osc.frequency.setValueAtTime(frequency, audioCtx.currentTime);
+            // Envelope decay ketukan cepat (snappy thock)
+            const decayTime = 0.08 + (currentProgressPercentage / 100) * 0.05; // 80ms sampai 130ms
+            
+            gain1.gain.setValueAtTime(0.45, audioCtx.currentTime);
+            gain1.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + decayTime);
+            
+            gain2.gain.setValueAtTime(0.15, audioCtx.currentTime);
+            gain2.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + decayTime * 0.6);
 
-            // Filter envelope untuk efek pluck "wah" cepat
-            filterNode.type = 'lowpass';
-            filterNode.Q.setValueAtTime(8, audioCtx.currentTime);
-            filterNode.frequency.setValueAtTime(frequency * 4, audioCtx.currentTime);
-            filterNode.frequency.exponentialRampToValueAtTime(frequency, audioCtx.currentTime + 0.15);
+            // Koneksi node audio
+            osc1.connect(filter);
+            osc2.connect(filter);
+            
+            const mainGain = audioCtx.createGain();
+            mainGain.gain.setValueAtTime(1.0, audioCtx.currentTime);
+            
+            filter.connect(mainGain);
+            mainGain.connect(audioCtx.destination);
 
-            // Gain envelope (Pluck decay)
-            gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.25);
+            osc1.start();
+            osc2.start();
+            osc1.stop(audioCtx.currentTime + decayTime + 0.02);
+            osc2.stop(audioCtx.currentTime + decayTime + 0.02);
 
-            osc.connect(filterNode);
-            filterNode.connect(gainNode);
-            gainNode.connect(audioCtx.destination);
-
-            osc.start();
-            osc.stop(audioCtx.currentTime + 0.3);
-
-            // Tambahkan juga mechanical keyboard click effect sekunder yang lirih
+            // 3. Efek hentakan keyboard kayu mekanik lirih (click transient)
             const clickOsc = audioCtx.createOscillator();
             const clickGain = audioCtx.createGain();
             clickOsc.type = 'sine';
-            clickOsc.frequency.setValueAtTime(1000 * pitchMultiplier, audioCtx.currentTime);
-            clickOsc.frequency.exponentialRampToValueAtTime(150 * pitchMultiplier, audioCtx.currentTime + 0.03);
-            clickGain.gain.setValueAtTime(0.05, audioCtx.currentTime);
-            clickGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.03);
+            clickOsc.frequency.setValueAtTime(frequency * 2.2, audioCtx.currentTime);
+            clickOsc.frequency.exponentialRampToValueAtTime(frequency * 0.6, audioCtx.currentTime + 0.02);
+            clickGain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+            clickGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.02);
             clickOsc.connect(clickGain);
             clickGain.connect(audioCtx.destination);
             clickOsc.start();
-            clickOsc.stop(audioCtx.currentTime + 0.04);
+            clickOsc.stop(audioCtx.currentTime + 0.025);
         }
 
         function playSuccessSound() {
