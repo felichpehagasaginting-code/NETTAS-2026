@@ -1270,6 +1270,7 @@
         // Simpan personal clicks lokal untuk disinkronkan berkala
         let myLocalClicks = 0;
         let lastSyncClicks = 0;
+        let lastSyncTime = 0;
         let syncTimeout = null;
 
         // =====================================================================
@@ -1493,31 +1494,61 @@
         });
 
         // Fitur 4: Listener Live Leaderboard Top 5
+        let currentLeaderboardData = [];
         const topUsersQuery = query(ref(db, 'users'), orderByChild('clicks'), limitToLast(5));
+        
         onValue(topUsersQuery, (snap) => {
-            const users = [];
+            currentLeaderboardData = [];
             snap.forEach(child => {
-                users.push({ id: child.key, ...child.val() });
+                currentLeaderboardData.push({ id: child.key, ...child.val() });
             });
-            users.reverse(); // Urutan dari klik terbanyak ke terkecil
-
-            const listEl = document.getElementById('leaderboard-list');
-            if (listEl) {
-                listEl.innerHTML = '';
-                if (users.length === 0) {
-                    listEl.innerHTML = '<li class="leaderboard-item"><span class="leaderboard-name">Mulai Tapping!</span></li>';
-                }
-                users.forEach(u => {
-                    const li = document.createElement('li');
-                    li.className = 'leaderboard-item' + (u.id === myNodeId ? ' is-me' : '');
-                    li.innerHTML = `
-                        <span class="leaderboard-name">${u.name}</span>
-                        <span class="leaderboard-val">${(u.clicks || 0).toLocaleString()}</span>
-                    `;
-                    listEl.appendChild(li);
-                });
-            }
+            currentLeaderboardData.reverse(); // Urutan dari klik terbanyak ke terkecil
+            renderLeaderboard();
         });
+
+        function renderLeaderboard() {
+            const listEl = document.getElementById('leaderboard-list');
+            if (!listEl) return;
+            listEl.innerHTML = '';
+            
+            // Salin data leaderboard untuk dimodifikasi secara lokal
+            let displayUsers = [...currentLeaderboardData];
+            
+            // Cari data lokal kita di leaderboard dan override dengan nilai paling update secara langsung
+            let meFound = false;
+            displayUsers = displayUsers.map(u => {
+                if (u.id === myNodeId) {
+                    meFound = true;
+                    return { ...u, clicks: Math.max(u.clicks || 0, myLocalClicks) };
+                }
+                return u;
+            });
+            
+            // Jika user lokal belum ada di list (belum masuk top 5), tetapi sudah memiliki klik > 0,
+            // kita sisipkan secara visual ke posisi yang tepat di leaderboard.
+            if (!meFound && myLocalClicks > 0 && myNodeName) {
+                displayUsers.push({ id: myNodeId, name: myNodeName, clicks: myLocalClicks });
+                displayUsers.sort((a, b) => b.clicks - a.clicks);
+                if (displayUsers.length > 5) {
+                    displayUsers = displayUsers.slice(0, 5);
+                }
+            }
+            
+            if (displayUsers.length === 0) {
+                listEl.innerHTML = '<li class="leaderboard-item"><span class="leaderboard-name">Mulai Tapping!</span></li>';
+                return;
+            }
+            
+            displayUsers.forEach(u => {
+                const li = document.createElement('li');
+                li.className = 'leaderboard-item' + (u.id === myNodeId ? ' is-me' : '');
+                li.innerHTML = `
+                    <span class="leaderboard-name">${u.name}</span>
+                    <span class="leaderboard-val">${(u.clicks || 0).toLocaleString()}</span>
+                `;
+                listEl.appendChild(li);
+            });
+        }
 
         // Fitur 9: Pengingat Pencapaian Milestone
         const displayedMilestones = new Set();
@@ -1728,12 +1759,21 @@
                 clicks: myLocalClicks
             }).then(() => {
                 lastSyncClicks = myLocalClicks;
+                lastSyncTime = Date.now();
             }).catch(e => console.error("Error syncing personal taps:", e));
         }
 
         function queueTapsSync() {
+            const now = Date.now();
             if (syncTimeout) clearTimeout(syncTimeout);
-            syncTimeout = setTimeout(syncTapsToFirebase, 800); // Sync setelah 800ms tanpa ketikan
+            
+            // Jika laju tap cepat, sync berkala setiap 2 detik secara background
+            if (now - lastSyncTime > 2000) {
+                syncTapsToFirebase();
+            } else {
+                // Debounce cadangan ketika pengguna berhenti mengetuk
+                syncTimeout = setTimeout(syncTapsToFirebase, 800);
+            }
         }
 
         // Event: Tap Utama
@@ -1744,6 +1784,10 @@
             
             // Tambahkan klik personal dan global
             myLocalClicks++;
+            
+            // Update tampilan papan peringkat secara instan untuk user lokal (Real-time UX)
+            renderLeaderboard();
+
             runTransaction(clicksRef, (curr) => (curr || 0) + 1);
             queueTapsSync();
 

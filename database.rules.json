@@ -23,9 +23,10 @@
     },
 
     "users": {
+      ".indexOn": ["clicks"],
       "$node_id": {
         ".read": true,
-        ".write": "!newData.exists() || (newData.child('clicks').isNumber() && newData.child('name').isString() && newData.child('clicks').val() >= data.child('clicks').val())"
+        ".write": "!newData.exists() || (newData.child('clicks').isNumber() && newData.child('name').isString())"
       }
     }
 
