@@ -1400,14 +1400,17 @@
         function playTapSound() {
             if (audioCtx.state === 'suspended') audioCtx.resume();
             
+            // Pengali pitch dinamis berdasarkan progres global (semakin mendekati 100%, nada dasar naik hingga 2.5x)
+            const pitchMultiplier = 1 + (currentProgressPercentage / 100) * 1.5;
+
             // Melodic pluck synthesizer mapped to Pentatonic scale
             const osc = audioCtx.createOscillator();
             const gainNode = audioCtx.createGain();
             const filterNode = audioCtx.createBiquadFilter();
 
-            // Tentukan nada harmonis berdasarkan click global
+            // Tentukan nada harmonis berdasarkan click global dan kalikan dengan pitchMultiplier
             const noteIndex = currentCount % PENTATONIC_SCALE.length;
-            const frequency = PENTATONIC_SCALE[noteIndex];
+            const frequency = PENTATONIC_SCALE[noteIndex] * pitchMultiplier;
 
             // Waveform type triangle agar terasa seperti pluck analog futuristik
             osc.type = 'triangle';
@@ -1434,8 +1437,8 @@
             const clickOsc = audioCtx.createOscillator();
             const clickGain = audioCtx.createGain();
             clickOsc.type = 'sine';
-            clickOsc.frequency.setValueAtTime(1000, audioCtx.currentTime);
-            clickOsc.frequency.exponentialRampToValueAtTime(150, audioCtx.currentTime + 0.03);
+            clickOsc.frequency.setValueAtTime(1000 * pitchMultiplier, audioCtx.currentTime);
+            clickOsc.frequency.exponentialRampToValueAtTime(150 * pitchMultiplier, audioCtx.currentTime + 0.03);
             clickGain.gain.setValueAtTime(0.05, audioCtx.currentTime);
             clickGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.03);
             clickOsc.connect(clickGain);
