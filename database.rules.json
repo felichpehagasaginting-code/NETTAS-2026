@@ -12,6 +12,12 @@
       ".read": true,
       "target_clicks": {
         ".write": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 999999"
+      },
+      "theme": {
+        ".write": "newData.isString()"
+      },
+      "bgm_url": {
+        ".write": "newData.isString()"
       }
     },
 
@@ -26,14 +32,7 @@
       ".indexOn": ["clicks"],
       "$node_id": {
         ".read": true,
-        ".write": "!data.exists() || (newData.child('clicks').isNumber() && newData.child('name').isString() && (!root.child('user_pins/' + $node_id).exists() || root.child('user_pins/' + $node_id).val() === newData.child('pinHash').val()))"
-      }
-    },
-
-    "user_pins": {
-      ".read": false,
-      "$node_id": {
-        ".write": "!data.exists() || data.val() === newData.val()"
+        ".write": "!newData.exists() || (newData.child('clicks').isNumber() && newData.child('name').isString())"
       }
     }
 
