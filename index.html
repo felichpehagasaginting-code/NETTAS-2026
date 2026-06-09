@@ -1265,7 +1265,8 @@
             <!-- Section 6: Dangerous Actions -->
             <div class="admin-section">
                 <p class="admin-section-label">⚠ Tindakan Berbahaya</p>
-                <button class="admin-btn admin-btn-danger" id="btn-admin-reset" style="margin-bottom: 0.7rem;">🔄 RESET SEMUA PROGRES & USER → 0</button>
+                <button class="admin-btn admin-btn-danger" id="btn-admin-reset" style="margin-bottom: 0.7rem;">🔄 RESET TOTAL PROGRESS → 0</button>
+                <button class="admin-btn admin-btn-danger" id="btn-admin-reset-users" style="margin-bottom: 0.7rem; background: rgba(255,153,0,0.15); border-color: rgba(255,153,0,0.4); color: #ff9900;">👥 HAPUS SEMUA USER NODE</button>
                 <button class="admin-btn admin-btn-success" id="btn-admin-force-win">🏆 FORCE VICTORY (100%)</button>
                 <p class="admin-status-msg" id="msg-action"></p>
             </div>
@@ -2151,19 +2152,25 @@
 
         // Tombol: Reset Progres
         document.getElementById('btn-admin-reset').addEventListener('click', () => {
-            if (!confirm('⚠ Anda yakin ingin me-reset SEMUA progres aktivasi ke 0 dan menghapus semua node? Tindakan ini tidak dapat dibatalkan!')) return;
+            if (!confirm('⚠ Anda yakin ingin me-reset TOTAL progres aktivasi ke 0? (Data user/node tidak akan terhapus). Tindakan ini tidak dapat dibatalkan!')) return;
             isFinished = false;
             displayedMilestones.clear(); // Bersihkan pelacak milestone agar bisa terpicu lagi
             document.getElementById('victory-modal').classList.remove('show');
             document.getElementById('strobe-layer').classList.remove('strobe-bg');
             document.body.classList.remove('bg-festive');
-            
-            // Bersihkan data kontribusi pengguna di database
-            set(ref(db, 'users'), null);
 
             set(clicksRef, 0)
-                .then(() => showAdminMsg('msg-action', '✓ Progres dan user berhasil direset ke 0.', 'success'))
-                .catch(() => showAdminMsg('msg-action', '✗ Gagal melakukan reset. Cek koneksi.', 'error'));
+                .then(() => showAdminMsg('msg-action', '✓ Progres berhasil direset ke 0.', 'success'))
+                .catch(() => showAdminMsg('msg-action', '✗ Gagal melakukan reset progres. Cek koneksi.', 'error'));
+        });
+
+        // Tombol: Reset/Hapus Semua User Node
+        document.getElementById('btn-admin-reset-users').addEventListener('click', () => {
+            if (!confirm('⚠ Anda yakin ingin menghapus SEMUA user node terdaftar? Kontribusi klik individual semua peserta akan dihapus!')) return;
+            
+            set(ref(db, 'users'), null)
+                .then(() => showAdminMsg('msg-action', '✓ Semua user node berhasil dihapus.', 'success'))
+                .catch(() => showAdminMsg('msg-action', '✗ Gagal menghapus user node. Cek koneksi.', 'error'));
         });
 
         // Tombol: Force Victory
