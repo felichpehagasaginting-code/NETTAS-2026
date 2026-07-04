@@ -1610,3 +1610,104 @@ h1 {
 .shake {
   animation: shake-anim 0.1s ease-in-out;
 }
+
+/* ── Custom non-blocking modal overlays ────────────────────────────────────── */
+.custom-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100000;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
+}
+
+.custom-modal-overlay.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+.custom-modal-box {
+  background: linear-gradient(135deg, rgba(20, 0, 40, 0.95), rgba(5, 0, 15, 0.95));
+  border: 1px solid var(--glass-border, rgba(191, 0, 255, 0.3));
+  border-radius: 16px;
+  padding: 2.2rem;
+  max-width: 380px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5), 0 0 30px rgba(191, 0, 255, 0.2);
+  transform: scale(0.85);
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.custom-modal-overlay.show .custom-modal-box {
+  transform: scale(1);
+}
+
+.custom-modal-icon {
+  font-size: 2.5rem;
+  margin-bottom: 0.8rem;
+  text-shadow: 0 0 10px var(--primary-neon);
+}
+
+.custom-modal-message {
+  font-family: 'Outfit', sans-serif;
+  color: var(--text-color, #fff);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin-bottom: 1.8rem;
+  letter-spacing: 0.05rem;
+}
+
+.custom-modal-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.custom-modal-btn {
+  padding: 0.7rem 1.4rem;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  letter-spacing: 0.1rem;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  transition: all 0.2s ease;
+  min-width: 100px;
+}
+
+.custom-modal-btn.btn-confirm {
+  background: linear-gradient(135deg, var(--primary-neon), var(--accent-neon));
+  color: #fff;
+  box-shadow: 0 0 12px rgba(191, 0, 255, 0.3);
+}
+
+.custom-modal-btn.btn-confirm:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 20px rgba(191, 0, 255, 0.5);
+}
+
+.custom-modal-btn.btn-confirm:active {
+  transform: translateY(0);
+}
+
+.custom-modal-btn.btn-cancel {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.custom-modal-btn.btn-cancel:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.3);
+}
+

@@ -1,5 +1,6 @@
 import { state, db, ref, get, set, onDisconnect } from './firebase';
 import { resumeAudio, initVisualizer, bgMusic } from './audio';
+import { customAlert } from './modal';
 
 function sanitizeName(raw: string): string {
   return raw.replace(/[^a-zA-Z0-9_\-\s]/g, '').slice(0, 12).trim() || 'ANON';
@@ -78,13 +79,13 @@ async function handleEnter(): Promise<void> {
     ).value.trim();
     const inputName = sanitizeName(rawName).toUpperCase();
     if (!inputName || inputName.length < 2) {
-      alert('NAMA NODE HARUS MINIMAL 2 KARAKTER!');
+      await customAlert('NAMA NODE HARUS MINIMAL 2 KARAKTER!');
       return;
     }
 
     const normalizedId = inputName.toLowerCase().replace(/[^a-z0-9_-]/g, '');
     if (normalizedId.length < 2) {
-      alert('NAMA NODE HARUS MINIMAL 2 KARAKTER ALFANUMERIK!');
+      await customAlert('NAMA NODE HARUS MINIMAL 2 KARAKTER ALFANUMERIK!');
       return;
     }
 
@@ -106,7 +107,7 @@ async function handleEnter(): Promise<void> {
       }
     } catch (err) {
       console.error('Error checking user node:', err);
-      alert('Koneksi gagal: ' + (err as Error).message);
+      await customAlert('Koneksi gagal: ' + (err as Error).message);
     } finally {
       btnEnter.innerText = '⚡ INITIALIZE CONNECTION';
       (btnEnter as HTMLButtonElement).disabled = false;
@@ -143,5 +144,5 @@ function completeLogin(nodeId: string, nodeName: string, clicks: number): void {
 }
 
 async function handlePinConfirm(): Promise<void> {
-  alert('PIN verification not implemented in intro flow');
+  await customAlert('PIN verification not implemented in intro flow');
 }

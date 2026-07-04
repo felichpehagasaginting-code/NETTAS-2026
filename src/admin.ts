@@ -1,5 +1,6 @@
 import { state, onValue, set, ref, db, get, clicksRef, configRef, configThemeRef, configBgmRef } from './firebase';
 import { ADMIN_HASH } from './config';
+import { customConfirm } from './modal';
 
 let adminOverlay: HTMLElement;
 let adminPinOverlay: HTMLElement;
@@ -216,8 +217,9 @@ function handleSetBgm(): void {
     .catch(() => showAdminMsg('msg-bgm', '✗ Gagal memperbarui URL BGM global.', 'error'));
 }
 
-function handleReset(): void {
-  if (!confirm('⚠ Anda yakin ingin me-reset TOTAL progres aktivasi ke 0? Tindakan ini tidak dapat dibatalkan!')) return;
+async function handleReset(): Promise<void> {
+  const ok = await customConfirm('⚠ Anda yakin ingin me-reset TOTAL progres aktivasi ke 0?<br>Tindakan ini tidak dapat dibatalkan!');
+  if (!ok) return;
   state.isFinished = false;
   state.displayedMilestones.clear();
   document.getElementById('victory-modal')!.classList.remove('show');
@@ -229,15 +231,17 @@ function handleReset(): void {
     .catch(() => showAdminMsg('msg-action', '✗ Gagal melakukan reset progres. Cek koneksi.', 'error'));
 }
 
-function handleResetUsers(): void {
-  if (!confirm('⚠ Anda yakin ingin menghapus SEMUA user node terdaftar?')) return;
+async function handleResetUsers(): Promise<void> {
+  const ok = await customConfirm('⚠ Anda yakin ingin menghapus SEMUA user node terdaftar?');
+  if (!ok) return;
   set(ref(db, 'users'), null)
     .then(() => showAdminMsg('msg-action', '✓ Semua user node berhasil dihapus.', 'success'))
     .catch(() => showAdminMsg('msg-action', '✗ Gagal menghapus user node. Cek koneksi.', 'error'));
 }
 
-function handleForceWin(): void {
-  if (!confirm('🏆 Aktifkan mode kemenangan sekarang? Counter akan di-set ke nilai TARGET.')) return;
+async function handleForceWin(): Promise<void> {
+  const ok = await customConfirm('🏆 Aktifkan mode kemenangan sekarang?<br>Counter akan di-set ke nilai TARGET.');
+  if (!ok) return;
   set(clicksRef, state.target)
     .then(() => {
       showAdminMsg('msg-action', '✓ Mode kemenangan diaktifkan!', 'success');
@@ -304,18 +308,26 @@ function renderUsersList(snap: any): void {
   });
 
   usersContainer.querySelectorAll('.admin-btn-action-reset').forEach((btn) => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', async () => {
       const id = (btn as HTMLElement).getAttribute('data-id');
-      if (id && confirm(`Reset klik untuk node ini?`)) {
-        set(ref(db, `users/${id}/clicks`), 0);
+      if (id) {
+        const name = (btn as HTMLElement).closest('div')?.parentElement?.querySelector('span')?.textContent || 'node';
+        const ok = await customConfirm(`Reset klik untuk node <strong>${name}</strong>?`);
+        if (ok) {
+          set(ref(db, `users/${id}/clicks`), 0);
+        }
       }
     });
   });
   usersContainer.querySelectorAll('.admin-btn-action-delete').forEach((btn) => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', async () => {
       const id = (btn as HTMLElement).getAttribute('data-id');
-      if (id && confirm(`Hapus node ini secara permanen?`)) {
-        set(ref(db, `users/${id}`), null);
+      if (id) {
+        const name = (btn as HTMLElement).closest('div')?.parentElement?.querySelector('span')?.textContent || 'node';
+        const ok = await customConfirm(`Hapus node <strong>${name}</strong> secara permanen?`);
+        if (ok) {
+          set(ref(db, `users/${id}`), null);
+        }
       }
     });
   });
