@@ -68,7 +68,9 @@ export function initUI(): void {
     }
   });
 
-  document.getElementById('tap-action')!.addEventListener('pointerdown', handleTap);
+  // `passive: true` hints to the browser that this handler never calls preventDefault(),
+  // allowing the browser to immediately start rendering the press response without blocking.
+  document.getElementById('tap-action')!.addEventListener('pointerdown', handleTap, { passive: true });
 
   document.getElementById('theme-dropdown')!.addEventListener('change', (e) => {
     const theme = (e.target as HTMLSelectElement).value;

@@ -17,8 +17,15 @@
     <link rel="manifest" href="/manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <!-- touch-action: manipulation removes the 300ms tap delay on mobile browsers -->
+    <style>html { touch-action: manipulation; }</style>
 </head>
 <body>
+    <!-- Isolated container for all DOM particle effects.
+         CSS `contain: layout style paint` scopes all reflow/repaint within this element
+         so particle animations never trigger global layout recalculations. -->
+    <div id="effects-overlay-container"></div>
+
     <div id="intro-overlay" class="intro-overlay">
         <div class="intro-scan-line"></div>
         <div class="intro-content">

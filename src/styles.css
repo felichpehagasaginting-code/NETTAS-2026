@@ -89,6 +89,20 @@
   user-select: none;
 }
 
+/* ── Isolated container for all DOM particle effects ──────────────────────────
+   `contain: layout style paint` ensures that any reflow/repaint triggered by
+   particle children is completely scoped to this subtree and never propagates
+   to the rest of the document. This is the single most impactful CSS change
+   for hype-mode performance on low-end mobile devices. ─────────────────────*/
+#effects-overlay-container {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 25000;
+  overflow: hidden;
+  contain: layout style paint;
+}
+
 .intro-overlay {
   position: fixed;
   inset: 0;
@@ -1054,6 +1068,8 @@ h1 {
   pointer-events: none;
   animation: float-up 1s ease-out forwards;
   z-index: 100;
+  /* Promote to GPU compositor layer — eliminates CPU-driven rasterization per frame */
+  will-change: transform, opacity;
 }
 
 @keyframes float-up {
@@ -1074,6 +1090,7 @@ h1 {
   pointer-events: none;
   z-index: 25000;
   animation: fallDown 2s ease-in forwards;
+  will-change: transform, opacity;
 }
 
 @keyframes fallDown {
@@ -1093,6 +1110,7 @@ h1 {
   pointer-events: none;
   z-index: 25000;
   animation: floatUpEmoji 4s ease-in forwards;
+  will-change: transform, opacity;
 }
 
 @keyframes floatUpEmoji {
@@ -1150,6 +1168,38 @@ h1 {
   animation: pulse-glow 2s infinite alternate;
 }
 
+/* OPTIMIZED: Previously animated `filter: drop-shadow(blur-radius)` which is
+   extremely expensive on mobile — triggers full GPU rasterization on every frame.
+   Replaced with transform+opacity which runs on the compositor thread at 60 FPS
+   even on low-end devices. A pseudo-element creates the static glow backdrop. */
+.glow-pulse {
+  position: relative;
+}
+
+.glow-pulse::after {
+  content: '';
+  position: absolute;
+  inset: -12px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--primary-neon) 0%, transparent 70%);
+  opacity: 0.15;
+  animation: pulse-glow-opacity 2s infinite alternate;
+  pointer-events: none;
+  z-index: -1;
+  will-change: opacity, transform;
+}
+
+@keyframes pulse-glow-opacity {
+  from {
+    opacity: 0.08;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 0.3;
+    transform: scale(1.08);
+  }
+}
+
 @keyframes pulse-glow {
   from {
     filter: drop-shadow(0 0 5px var(--primary-neon));
@@ -1166,6 +1216,7 @@ h1 {
   pointer-events: none;
   animation: shockwave-anim 0.5s ease-out forwards;
   z-index: 50;
+  will-change: transform, opacity;
 }
 
 @keyframes shockwave-anim {

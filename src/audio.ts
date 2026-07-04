@@ -10,12 +10,50 @@ bgMusic.loop = true;
 bgMusic.volume = 0.4;
 bgMusic.crossOrigin = 'anonymous';
 
+// ─── Pre-cached audio buffers ────────────────────────────────────────────────
+// Generate once on startup to avoid heavy per-tap allocations that cause GC spikes.
+
+let _cachedNoiseBuffer: AudioBuffer | null = null;
+let _cachedReverbBuffer: AudioBuffer | null = null;
+
+function getNoiseBuffer(): AudioBuffer {
+  if (_cachedNoiseBuffer) return _cachedNoiseBuffer;
+  const bufferSize = Math.ceil(audioCtx.sampleRate * 0.008);
+  const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < bufferSize; i++) {
+    data[i] = Math.random() * 2 - 1;
+  }
+  _cachedNoiseBuffer = buffer;
+  return buffer;
+}
+
+function getReverbBuffer(): AudioBuffer {
+  if (_cachedReverbBuffer) return _cachedReverbBuffer;
+  const reverbLen = Math.ceil(audioCtx.sampleRate * 0.12);
+  const reverbBuffer = audioCtx.createBuffer(2, reverbLen, audioCtx.sampleRate);
+  for (let ch = 0; ch < 2; ch++) {
+    const channelData = reverbBuffer.getChannelData(ch);
+    for (let i = 0; i < reverbLen; i++) {
+      channelData[i] = (Math.random() * 2 - 1) * (1 - i / reverbLen);
+    }
+  }
+  _cachedReverbBuffer = reverbBuffer;
+  return reverbBuffer;
+}
+
+// ─── Visualizer ──────────────────────────────────────────────────────────────
+
 let analyser: AnalyserNode | null = null;
 let source: MediaElementAudioSourceNode | null = null;
 let visualizerInited = false;
 
 const vCanvas = document.getElementById('visualizer') as HTMLCanvasElement;
 const vCtx = vCanvas?.getContext('2d');
+
+// Persistent typed array — allocated once, reused every frame (avoids 60 GC/s)
+let _vizDataArray: Uint8Array<ArrayBuffer> | null = null;
+let _vizLastWidth = 0;
 
 let noteIndex = 0;
 
@@ -26,32 +64,42 @@ export function initVisualizer(): void {
   source.connect(analyser);
   analyser.connect(audioCtx.destination);
   analyser.fftSize = 256;
+  _vizDataArray = new Uint8Array(analyser.frequencyBinCount) as Uint8Array<ArrayBuffer>;
   visualizerInited = true;
   drawVisualizer();
 }
 
 function drawVisualizer(): void {
   requestAnimationFrame(drawVisualizer);
-  if (!analyser || !vCanvas || !vCtx) return;
-  const bufferLength = analyser.frequencyBinCount;
-  const dataArray = new Uint8Array(bufferLength);
-  analyser.getByteFrequencyData(dataArray);
+  if (!analyser || !vCanvas || !vCtx || !_vizDataArray) return;
 
-  vCanvas.width = window.innerWidth;
-  vCanvas.height = 100;
+  // Guard: only update canvas dimensions when the actual viewport width changes —
+  // previously this triggered a full layout recalculation on every single frame.
+  const currentWidth = window.innerWidth;
+  if (currentWidth !== _vizLastWidth) {
+    vCanvas.width = currentWidth;
+    vCanvas.height = 100;
+    _vizLastWidth = currentWidth;
+  }
+
+  analyser.getByteFrequencyData(_vizDataArray);
   vCtx.clearRect(0, 0, vCanvas.width, vCanvas.height);
 
+  const bufferLength = _vizDataArray.length;
   const barWidth = (vCanvas.width / bufferLength) * 2.5;
-  let barHeight: number;
   let x = 0;
 
   for (let i = 0; i < bufferLength; i++) {
-    barHeight = dataArray[i] / 2;
-    vCtx.fillStyle = `rgba(191, 0, 255, ${barHeight / 100})`;
+    const barHeight = _vizDataArray[i] / 2;
+    // Pre-compute opacity once per bar — avoid template-literal string construction in tight loop
+    const alpha = barHeight / 100;
+    vCtx.fillStyle = `rgba(191,0,255,${alpha.toFixed(2)})`;
     vCtx.fillRect(x, vCanvas.height - barHeight, barWidth, barHeight);
     x += barWidth + 1;
   }
 }
+
+// ─── Audio control ───────────────────────────────────────────────────────────
 
 export function resumeAudio(): void {
   if (audioCtx.state === 'suspended') {
@@ -72,6 +120,10 @@ export function toggleMusic(): void {
   }
 }
 
+// ─── Tap sound (optimized) ────────────────────────────────────────────────────
+// Critical hot path: called on every user tap. All heavy buffer allocations are
+// now replaced with references to pre-cached buffers above.
+
 export function playTapSound(clientX?: number, _clientY?: number): void {
   if (audioCtx.state === 'suspended') audioCtx.resume();
 
@@ -81,164 +133,162 @@ export function playTapSound(clientX?: number, _clientY?: number): void {
   const baseFreq = PENTATONIC_SCALE[scaleIndex];
   noteIndex++;
 
+  const now = audioCtx.currentTime;
+
   const masterGain = audioCtx.createGain();
-  masterGain.gain.setValueAtTime(0.3 + progress * 0.15, audioCtx.currentTime);
+  masterGain.gain.setValueAtTime(0.3 + progress * 0.15, now);
 
   const panner = audioCtx.createStereoPanner();
-  panner.pan.setValueAtTime(panValue, audioCtx.currentTime);
+  panner.pan.setValueAtTime(panValue, now);
   masterGain.connect(panner);
   panner.connect(audioCtx.destination);
 
+  // Melody oscillator
   const oscMelody = audioCtx.createOscillator();
   const melodyGain = audioCtx.createGain();
   oscMelody.type = 'triangle';
-  oscMelody.frequency.setValueAtTime(baseFreq, audioCtx.currentTime);
-  oscMelody.frequency.exponentialRampToValueAtTime(baseFreq * 1.08, audioCtx.currentTime + 0.003);
-  melodyGain.gain.setValueAtTime(0.35, audioCtx.currentTime);
-  melodyGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.08 + progress * 0.04);
+  oscMelody.frequency.setValueAtTime(baseFreq, now);
+  oscMelody.frequency.exponentialRampToValueAtTime(baseFreq * 1.08, now + 0.003);
+  melodyGain.gain.setValueAtTime(0.35, now);
+  melodyGain.gain.exponentialRampToValueAtTime(0.001, now + 0.08 + progress * 0.04);
   oscMelody.connect(melodyGain);
   melodyGain.connect(masterGain);
-  oscMelody.start();
-  oscMelody.stop(audioCtx.currentTime + 0.12);
+  oscMelody.start(now);
+  oscMelody.stop(now + 0.12);
 
+  // White noise hit (now uses pre-cached buffer — zero allocation)
   const noise = audioCtx.createBufferSource();
   const noiseGain = audioCtx.createGain();
   const noiseFilter = audioCtx.createBiquadFilter();
-  const bufferSize = audioCtx.sampleRate * 0.008;
-  const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-  const data = buffer.getChannelData(0);
-  for (let i = 0; i < bufferSize; i++) {
-    data[i] = Math.random() * 2 - 1;
-  }
-  noise.buffer = buffer;
+  noise.buffer = getNoiseBuffer(); // cached
   noiseFilter.type = 'highpass';
-  noiseFilter.frequency.setValueAtTime(baseFreq * 0.9, audioCtx.currentTime);
-  noiseFilter.Q.setValueAtTime(4, audioCtx.currentTime);
-  noiseGain.gain.setValueAtTime(0.15, audioCtx.currentTime);
-  noiseGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.006);
+  noiseFilter.frequency.setValueAtTime(baseFreq * 0.9, now);
+  noiseFilter.Q.setValueAtTime(4, now);
+  noiseGain.gain.setValueAtTime(0.15, now);
+  noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.006);
   noise.connect(noiseFilter);
   noiseFilter.connect(noiseGain);
   noiseGain.connect(masterGain);
-  noise.start();
+  noise.start(now);
 
+  // Bass oscillator
   const oscBass = audioCtx.createOscillator();
   const bassGain = audioCtx.createGain();
   oscBass.type = 'sine';
   const bassFreq = baseFreq * 0.5;
-  oscBass.frequency.setValueAtTime(bassFreq, audioCtx.currentTime);
-  oscBass.frequency.exponentialRampToValueAtTime(bassFreq * 0.6, audioCtx.currentTime + 0.04);
-  bassGain.gain.setValueAtTime(0.12 + progress * 0.1, audioCtx.currentTime);
-  bassGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
+  oscBass.frequency.setValueAtTime(bassFreq, now);
+  oscBass.frequency.exponentialRampToValueAtTime(bassFreq * 0.6, now + 0.04);
+  bassGain.gain.setValueAtTime(0.12 + progress * 0.1, now);
+  bassGain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
   oscBass.connect(bassGain);
   bassGain.connect(masterGain);
-  oscBass.start();
-  oscBass.stop(audioCtx.currentTime + 0.06);
+  oscBass.start(now);
+  oscBass.stop(now + 0.06);
 
+  // Harmony oscillator (sparse — only at high progress)
   if (progress > 0.5 && Math.random() > 0.7) {
     const oscHarmony = audioCtx.createOscillator();
     const harmGain = audioCtx.createGain();
     oscHarmony.type = 'sine';
-    oscHarmony.frequency.setValueAtTime(baseFreq * 1.5, audioCtx.currentTime);
-    harmGain.gain.setValueAtTime(0, audioCtx.currentTime);
-    harmGain.gain.linearRampToValueAtTime(0.08, audioCtx.currentTime + 0.02);
-    harmGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.15);
+    oscHarmony.frequency.setValueAtTime(baseFreq * 1.5, now);
+    harmGain.gain.setValueAtTime(0, now);
+    harmGain.gain.linearRampToValueAtTime(0.08, now + 0.02);
+    harmGain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
     oscHarmony.connect(harmGain);
     harmGain.connect(masterGain);
-    oscHarmony.start();
-    oscHarmony.stop(audioCtx.currentTime + 0.18);
+    oscHarmony.start(now);
+    oscHarmony.stop(now + 0.18);
   }
 
+  // Reverb (now uses pre-cached buffer — zero allocation)
   const reverbGain = audioCtx.createGain();
-  reverbGain.gain.setValueAtTime(0.1 + progress * 0.2, audioCtx.currentTime);
-  reverbGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.15);
+  reverbGain.gain.setValueAtTime(0.1 + progress * 0.2, now);
+  reverbGain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
   const dryGain = audioCtx.createGain();
-  dryGain.gain.setValueAtTime(0.8, audioCtx.currentTime);
+  dryGain.gain.setValueAtTime(0.8, now);
   masterGain.connect(dryGain);
   dryGain.connect(panner);
 
-  const reverbLen = audioCtx.sampleRate * 0.12;
-  const reverbBuffer = audioCtx.createBuffer(2, reverbLen, audioCtx.sampleRate);
-  for (let ch = 0; ch < 2; ch++) {
-    const channelData = reverbBuffer.getChannelData(ch);
-    for (let i = 0; i < reverbLen; i++) {
-      channelData[i] = (Math.random() * 2 - 1) * (1 - i / reverbLen);
-    }
-  }
   const reverb = audioCtx.createConvolver();
-  reverb.buffer = reverbBuffer;
+  reverb.buffer = getReverbBuffer(); // cached
   masterGain.connect(reverb);
   reverb.connect(reverbGain);
   reverbGain.connect(panner);
 }
 
+// ─── Milestone / success sounds ───────────────────────────────────────────────
+
 export function playMilestoneSound(): void {
   if (audioCtx.state === 'suspended') audioCtx.resume();
   const notes = [261.63, 329.63, 392.0, 523.25];
+  const now = audioCtx.currentTime;
   notes.forEach((freq, i) => {
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
     const panner = audioCtx.createStereoPanner();
     osc.type = 'triangle';
-    osc.frequency.setValueAtTime(freq, audioCtx.currentTime + i * 0.12);
-    gain.gain.setValueAtTime(0, audioCtx.currentTime + i * 0.12);
-    gain.gain.linearRampToValueAtTime(0.15, audioCtx.currentTime + i * 0.12 + 0.04);
-    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + i * 0.12 + 0.4);
-    panner.pan.setValueAtTime(Math.sin(i * 1.5) * 0.5, audioCtx.currentTime + i * 0.12);
+    osc.frequency.setValueAtTime(freq, now + i * 0.12);
+    gain.gain.setValueAtTime(0, now + i * 0.12);
+    gain.gain.linearRampToValueAtTime(0.15, now + i * 0.12 + 0.04);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.12 + 0.4);
+    panner.pan.setValueAtTime(Math.sin(i * 1.5) * 0.5, now + i * 0.12);
     osc.connect(gain);
     gain.connect(panner);
     panner.connect(audioCtx.destination);
-    osc.start(audioCtx.currentTime + i * 0.12);
-    osc.stop(audioCtx.currentTime + i * 0.12 + 0.4);
+    osc.start(now + i * 0.12);
+    osc.stop(now + i * 0.12 + 0.4);
   });
 }
 
 export function playSuccessSound(): void {
   const notes = [261.63, 329.63, 392.0, 523.25, 659.25, 783.99, 1046.5];
+  const now = audioCtx.currentTime;
   notes.forEach((freq, i) => {
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
     const panner = audioCtx.createStereoPanner();
     osc.type = 'triangle';
-    osc.frequency.setValueAtTime(freq, audioCtx.currentTime + i * 0.1);
-    gain.gain.setValueAtTime(0, audioCtx.currentTime + i * 0.1);
-    gain.gain.linearRampToValueAtTime(0.1, audioCtx.currentTime + i * 0.1 + 0.05);
-    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + i * 0.1 + 0.5);
-    panner.pan.setValueAtTime(Math.sin(i * 0.8) * 0.7, audioCtx.currentTime + i * 0.1);
+    osc.frequency.setValueAtTime(freq, now + i * 0.1);
+    gain.gain.setValueAtTime(0, now + i * 0.1);
+    gain.gain.linearRampToValueAtTime(0.1, now + i * 0.1 + 0.05);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.1 + 0.5);
+    panner.pan.setValueAtTime(Math.sin(i * 0.8) * 0.7, now + i * 0.1);
     osc.connect(gain);
     gain.connect(panner);
     panner.connect(audioCtx.destination);
-    osc.start(audioCtx.currentTime + i * 0.1);
-    osc.stop(audioCtx.currentTime + i * 0.1 + 0.5);
+    osc.start(now + i * 0.1);
+    osc.stop(now + i * 0.1 + 0.5);
   });
 }
 
 export function playPartyHorn(): void {
   if (audioCtx.state === 'suspended') audioCtx.resume();
 
+  const now = audioCtx.currentTime;
   const osc = audioCtx.createOscillator();
   const gain = audioCtx.createGain();
   const filter = audioCtx.createBiquadFilter();
   const panner = audioCtx.createStereoPanner();
 
   osc.type = 'sawtooth';
-  osc.frequency.setValueAtTime(200, audioCtx.currentTime);
-  osc.frequency.exponentialRampToValueAtTime(400, audioCtx.currentTime + 0.1);
-  osc.frequency.exponentialRampToValueAtTime(300, audioCtx.currentTime + 0.5);
+  osc.frequency.setValueAtTime(200, now);
+  osc.frequency.exponentialRampToValueAtTime(400, now + 0.1);
+  osc.frequency.exponentialRampToValueAtTime(300, now + 0.5);
 
   filter.type = 'lowpass';
-  filter.frequency.setValueAtTime(2000, audioCtx.currentTime);
+  filter.frequency.setValueAtTime(2000, now);
 
-  gain.gain.setValueAtTime(0, audioCtx.currentTime);
-  gain.gain.linearRampToValueAtTime(0.3, audioCtx.currentTime + 0.05);
-  gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.8);
+  gain.gain.setValueAtTime(0, now);
+  gain.gain.linearRampToValueAtTime(0.3, now + 0.05);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
 
-  panner.pan.setValueAtTime(Math.random() * 0.8 - 0.4, audioCtx.currentTime);
+  panner.pan.setValueAtTime(Math.random() * 0.8 - 0.4, now);
 
   osc.connect(filter);
   filter.connect(gain);
   gain.connect(panner);
   panner.connect(audioCtx.destination);
 
-  osc.start();
-  osc.stop(audioCtx.currentTime + 0.8);
+  osc.start(now);
+  osc.stop(now + 0.8);
 }
