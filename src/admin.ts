@@ -1,6 +1,7 @@
 import { state, onValue, set, ref, db, get, clicksRef, configRef, configThemeRef, configBgmRef } from './firebase';
 import { ADMIN_HASH } from './config';
 import { customConfirm } from './modal';
+import { bgMusic, victoryMusic } from './audio';
 
 let adminOverlay: HTMLElement;
 let adminPinOverlay: HTMLElement;
@@ -225,6 +226,18 @@ async function handleReset(): Promise<void> {
   document.getElementById('victory-modal')!.classList.remove('show');
   document.getElementById('strobe-layer')!.classList.remove('strobe-bg');
   document.body.classList.remove('bg-festive');
+
+  // Stop victory anthem and restore instrumental BGM state
+  victoryMusic.pause();
+  victoryMusic.currentTime = 0;
+  victoryMusic.volume = 0;
+  bgMusic.currentTime = 0;
+  bgMusic.volume = 0.4;
+  
+  const musicStatus = document.getElementById('music-status')?.innerText || '';
+  if (musicStatus.includes('ON')) {
+    bgMusic.play().catch((e) => console.warn('BGM autoplay on reset failed:', e));
+  }
 
   set(clicksRef, 0)
     .then(() => showAdminMsg('msg-action', '✓ Progres berhasil direset ke 0.', 'success'))

@@ -1,14 +1,17 @@
 import { state } from './firebase';
-import { PENTATONIC_SCALE } from './config';
+import { DEFAULT_BGM_INSTRUMENTAL, DEFAULT_BGM_VICTORY } from './config';
 
 export const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
 
-export const bgMusic = new Audio(
-  'https://cdn.pixabay.com/audio/2022/03/24/audio_7306283b27.mp3',
-);
+export const bgMusic = new Audio(DEFAULT_BGM_INSTRUMENTAL);
 bgMusic.loop = true;
 bgMusic.volume = 0.4;
 bgMusic.crossOrigin = 'anonymous';
+
+export const victoryMusic = new Audio(DEFAULT_BGM_VICTORY);
+victoryMusic.loop = true;
+victoryMusic.volume = 0; // Starts silent for a smooth fade-in
+victoryMusic.crossOrigin = 'anonymous';
 
 // ─── Pre-cached audio buffers ────────────────────────────────────────────────
 // Generate once on startup to avoid heavy per-tap allocations that cause GC spikes.
@@ -45,7 +48,8 @@ function getReverbBuffer(): AudioBuffer {
 // ─── Visualizer ──────────────────────────────────────────────────────────────
 
 let analyser: AnalyserNode | null = null;
-let source: MediaElementAudioSourceNode | null = null;
+let sourceBg: MediaElementAudioSourceNode | null = null;
+let sourceVictory: MediaElementAudioSourceNode | null = null;
 let visualizerInited = false;
 
 const vCanvas = document.getElementById('visualizer') as HTMLCanvasElement;
@@ -55,13 +59,17 @@ const vCtx = vCanvas?.getContext('2d');
 let _vizDataArray: Uint8Array<ArrayBuffer> | null = null;
 let _vizLastWidth = 0;
 
-let noteIndex = 0;
-
 export function initVisualizer(): void {
   if (!audioCtx || !vCanvas || !vCtx) return;
-  source = audioCtx.createMediaElementSource(bgMusic);
+  
+  // Connect both audio elements to the same analyser so the visualizer works in both phases!
+  sourceBg = audioCtx.createMediaElementSource(bgMusic);
+  sourceVictory = audioCtx.createMediaElementSource(victoryMusic);
+  
   analyser = audioCtx.createAnalyser();
-  source.connect(analyser);
+  sourceBg.connect(analyser);
+  sourceVictory.connect(analyser);
+  
   analyser.connect(audioCtx.destination);
   analyser.fftSize = 256;
   _vizDataArray = new Uint8Array(analyser.frequencyBinCount) as Uint8Array<ArrayBuffer>;
@@ -107,15 +115,84 @@ export function resumeAudio(): void {
   }
 }
 
+// Helper to fade out an audio track smoothly
+export function fadeOut(audio: HTMLAudioElement, durationMs: number, callback?: () => void): void {
+  const steps = 25;
+  const intervalTime = durationMs / steps;
+  const startVolume = audio.volume;
+  const volStep = startVolume / steps;
+  
+  let currentStep = 0;
+  const timer = setInterval(() => {
+    currentStep++;
+    const nextVol = Math.max(0, startVolume - (volStep * currentStep));
+    audio.volume = nextVol;
+    
+    if (currentStep >= steps || nextVol <= 0) {
+      clearInterval(timer);
+      audio.volume = 0;
+      if (callback) callback();
+    }
+  }, intervalTime);
+}
+
+// Helper to fade in an audio track smoothly
+export function fadeIn(audio: HTMLAudioElement, durationMs: number, targetVolume: number, callback?: () => void): void {
+  audio.volume = 0;
+  const steps = 25;
+  const intervalTime = durationMs / steps;
+  const volStep = targetVolume / steps;
+  
+  let currentStep = 0;
+  const timer = setInterval(() => {
+    currentStep++;
+    const nextVol = Math.min(targetVolume, volStep * currentStep);
+    audio.volume = nextVol;
+    
+    if (currentStep >= steps || nextVol >= targetVolume) {
+      clearInterval(timer);
+      audio.volume = targetVolume;
+      if (callback) callback();
+    }
+  }, intervalTime);
+}
+
+export function playVictoryAnthem(): void {
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  if (!visualizerInited) initVisualizer();
+
+  // 1. Smoothly fade out BGM instrumental over 2 seconds
+  fadeOut(bgMusic, 2000, () => {
+    bgMusic.pause();
+  });
+
+  // 2. Start victory anthem after 1 second, fading in over 1.5 seconds
+  setTimeout(() => {
+    victoryMusic.volume = 0;
+    victoryMusic.currentTime = 0;
+    victoryMusic.play().catch((e) => console.warn('Victory music autoplay failed:', e));
+    fadeIn(victoryMusic, 1500, 0.5);
+  }, 1000);
+}
+
 export function toggleMusic(): void {
   if (audioCtx.state === 'suspended') audioCtx.resume();
   if (!visualizerInited) initVisualizer();
 
-  if (bgMusic.paused) {
-    bgMusic.play().catch((e) => console.error('Audio play failed:', e));
+  const isVictory = state.isFinished;
+  const activeMusic = isVictory ? victoryMusic : bgMusic;
+  const otherMusic = isVictory ? bgMusic : victoryMusic;
+
+  // Make sure the inactive track is paused
+  otherMusic.pause();
+
+  if (activeMusic.paused) {
+    activeMusic.play().catch((e) => console.error('Audio play failed:', e));
     document.getElementById('music-status')!.innerText = 'MUSIC: ON';
+    // Restore solid default volumes
+    activeMusic.volume = isVictory ? 0.5 : 0.4;
   } else {
-    bgMusic.pause();
+    activeMusic.pause();
     document.getElementById('music-status')!.innerText = 'MUSIC: OFF';
   }
 }

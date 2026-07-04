@@ -1,9 +1,9 @@
 import {
-  state, clicksRef, configRef, configThemeRef, configBgmRef,
+  state, clicksRef, configRef, configThemeRef, configBgmRef, configVictoryBgmRef,
   db, ref, set, update, onValue, runTransaction, topUsersQuery,
   connectedRef, presenceRef, onDisconnect, tapDistributed,
 } from './firebase';
-import { playTapSound, playMilestoneSound, playSuccessSound, playPartyHorn, bgMusic } from './audio';
+import { playTapSound, playMilestoneSound, playSuccessSound, playPartyHorn, bgMusic, victoryMusic, playVictoryAnthem } from './audio';
 import {
   fireworksShow, triggerMilestoneConfetti, createTapEffect, createShockwave,
   triggerImpact, spawnFallingEmojiOnClick, updateCanvasColor,
@@ -64,6 +64,17 @@ export function initUI(): void {
       bgMusic.src = newBgmUrl;
       if (isPlaying) {
         bgMusic.play().catch((e: Error) => console.warn('Music play failed:', e));
+      }
+    }
+  });
+
+  onValue(configVictoryBgmRef, (snap) => {
+    const newVictoryBgmUrl = snap.val();
+    if (newVictoryBgmUrl && newVictoryBgmUrl !== victoryMusic.src) {
+      const isPlaying = !victoryMusic.paused;
+      victoryMusic.src = newVictoryBgmUrl;
+      if (isPlaying) {
+        victoryMusic.play().catch((e: Error) => console.warn('Victory music play failed:', e));
       }
     }
   });
@@ -210,6 +221,7 @@ function win(): void {
   setTimeout(playPartyHorn, 600);
   playSuccessSound();
   fireworksShow();
+  playVictoryAnthem();
 }
 
 function subscribeLeaderboard(): void {

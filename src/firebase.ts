@@ -38,6 +38,7 @@ export const connectedRef = ref(db, '.info/connected');
 export const configRef = ref(db, 'config/target_clicks');
 export const configThemeRef = ref(db, 'config/theme');
 export const configBgmRef = ref(db, 'config/bgm_url');
+export const configVictoryBgmRef = ref(db, 'config/victory_bgm_url');
 export const usersRef = ref(db, 'users');
 export const topUsersQuery = query(ref(db, 'users'), orderByChild('clicks'), limitToLast(5));
 export const adminsRef = ref(db, 'admins');
