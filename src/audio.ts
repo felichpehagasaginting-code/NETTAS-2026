@@ -129,91 +129,103 @@ export function playTapSound(clientX?: number, _clientY?: number): void {
 
   const progress = state.currentProgressPercentage / 100;
   const panValue = clientX ? ((clientX / window.innerWidth) * 2 - 1) * 0.6 : 0;
-  const scaleIndex = noteIndex % PENTATONIC_SCALE.length;
-  const baseFreq = PENTATONIC_SCALE[scaleIndex];
-  noteIndex++;
+  
+  // Blue Switch clicky profile frequency calculation based on progress
+  const clickFreq = 2200 + progress * 2000;
+  const clackFreq = 450 + progress * 450;
+  const bottomFreq = 130 + progress * 130;
 
   const now = audioCtx.currentTime;
 
   const masterGain = audioCtx.createGain();
-  masterGain.gain.setValueAtTime(0.3 + progress * 0.15, now);
+  masterGain.gain.setValueAtTime(0.7, now);
 
   const panner = audioCtx.createStereoPanner();
   panner.pan.setValueAtTime(panValue, now);
   masterGain.connect(panner);
   panner.connect(audioCtx.destination);
 
-  // Melody oscillator
-  const oscMelody = audioCtx.createOscillator();
-  const melodyGain = audioCtx.createGain();
-  oscMelody.type = 'triangle';
-  oscMelody.frequency.setValueAtTime(baseFreq, now);
-  oscMelody.frequency.exponentialRampToValueAtTime(baseFreq * 1.08, now + 0.003);
-  melodyGain.gain.setValueAtTime(0.35, now);
-  melodyGain.gain.exponentialRampToValueAtTime(0.001, now + 0.08 + progress * 0.04);
-  oscMelody.connect(melodyGain);
-  melodyGain.connect(masterGain);
-  oscMelody.start(now);
-  oscMelody.stop(now + 0.12);
+  // 1. Click Jacket Snap (Metallic Click - High Frequency Resonant Transient)
+  const oscClick = audioCtx.createOscillator();
+  const clickGain = audioCtx.createGain();
+  const clickFilter = audioCtx.createBiquadFilter();
 
-  // White noise hit (now uses pre-cached buffer — zero allocation)
+  oscClick.type = 'triangle';
+  oscClick.frequency.setValueAtTime(clickFreq, now);
+  oscClick.frequency.exponentialRampToValueAtTime(clickFreq * 1.1, now + 0.005);
+
+  clickFilter.type = 'bandpass';
+  clickFilter.frequency.setValueAtTime(clickFreq, now);
+  clickFilter.Q.setValueAtTime(12, now);
+
+  clickGain.gain.setValueAtTime(0.45, now);
+  clickGain.gain.exponentialRampToValueAtTime(0.001, now + 0.006);
+
+  oscClick.connect(clickFilter);
+  clickFilter.connect(clickGain);
+  clickGain.connect(masterGain);
+
+  // 2. High Frequency Crisp Noise Transient (Tactile snap feel)
   const noise = audioCtx.createBufferSource();
   const noiseGain = audioCtx.createGain();
   const noiseFilter = audioCtx.createBiquadFilter();
-  noise.buffer = getNoiseBuffer(); // cached
+  
+  noise.buffer = getNoiseBuffer(); // Cached, zero allocation
+  
   noiseFilter.type = 'highpass';
-  noiseFilter.frequency.setValueAtTime(baseFreq * 0.9, now);
-  noiseFilter.Q.setValueAtTime(4, now);
-  noiseGain.gain.setValueAtTime(0.15, now);
+  noiseFilter.frequency.setValueAtTime(clickFreq * 0.95, now);
+  noiseFilter.Q.setValueAtTime(3.0, now);
+  
+  noiseGain.gain.setValueAtTime(0.18, now);
   noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.006);
+  
   noise.connect(noiseFilter);
   noiseFilter.connect(noiseGain);
   noiseGain.connect(masterGain);
+
+  // 3. Plastic Clack (Triangle wave - stem bottom-out)
+  const oscClack = audioCtx.createOscillator();
+  const clackGain = audioCtx.createGain();
+  const clackFilter = audioCtx.createBiquadFilter();
+  
+  oscClack.type = 'triangle';
+  oscClack.frequency.setValueAtTime(clackFreq, now);
+  oscClack.frequency.exponentialRampToValueAtTime(clackFreq * 0.85, now + 0.015);
+  
+  clackFilter.type = 'lowpass';
+  clackFilter.frequency.setValueAtTime(clackFreq * 2.0, now);
+  clackFilter.Q.setValueAtTime(1.5, now);
+  
+  clackGain.gain.setValueAtTime(0.25, now);
+  clackGain.gain.exponentialRampToValueAtTime(0.001, now + 0.018);
+  
+  oscClack.connect(clackFilter);
+  clackFilter.connect(clackGain);
+  clackGain.connect(masterGain);
+
+  // 4. Housing Bottom-Out (Sine wave - deep wood/plate thock resonance)
+  const oscBottom = audioCtx.createOscillator();
+  const bottomGain = audioCtx.createGain();
+  
+  oscBottom.type = 'sine';
+  oscBottom.frequency.setValueAtTime(bottomFreq, now);
+  oscBottom.frequency.exponentialRampToValueAtTime(bottomFreq * 0.7, now + 0.035);
+  
+  bottomGain.gain.setValueAtTime(0.15, now);
+  bottomGain.gain.exponentialRampToValueAtTime(0.001, now + 0.038);
+  
+  oscBottom.connect(bottomGain);
+  bottomGain.connect(masterGain);
+
+  // Start & Stop
   noise.start(now);
-
-  // Bass oscillator
-  const oscBass = audioCtx.createOscillator();
-  const bassGain = audioCtx.createGain();
-  oscBass.type = 'sine';
-  const bassFreq = baseFreq * 0.5;
-  oscBass.frequency.setValueAtTime(bassFreq, now);
-  oscBass.frequency.exponentialRampToValueAtTime(bassFreq * 0.6, now + 0.04);
-  bassGain.gain.setValueAtTime(0.12 + progress * 0.1, now);
-  bassGain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
-  oscBass.connect(bassGain);
-  bassGain.connect(masterGain);
-  oscBass.start(now);
-  oscBass.stop(now + 0.06);
-
-  // Harmony oscillator (sparse — only at high progress)
-  if (progress > 0.5 && Math.random() > 0.7) {
-    const oscHarmony = audioCtx.createOscillator();
-    const harmGain = audioCtx.createGain();
-    oscHarmony.type = 'sine';
-    oscHarmony.frequency.setValueAtTime(baseFreq * 1.5, now);
-    harmGain.gain.setValueAtTime(0, now);
-    harmGain.gain.linearRampToValueAtTime(0.08, now + 0.02);
-    harmGain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
-    oscHarmony.connect(harmGain);
-    harmGain.connect(masterGain);
-    oscHarmony.start(now);
-    oscHarmony.stop(now + 0.18);
-  }
-
-  // Reverb (now uses pre-cached buffer — zero allocation)
-  const reverbGain = audioCtx.createGain();
-  reverbGain.gain.setValueAtTime(0.1 + progress * 0.2, now);
-  reverbGain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
-  const dryGain = audioCtx.createGain();
-  dryGain.gain.setValueAtTime(0.8, now);
-  masterGain.connect(dryGain);
-  dryGain.connect(panner);
-
-  const reverb = audioCtx.createConvolver();
-  reverb.buffer = getReverbBuffer(); // cached
-  masterGain.connect(reverb);
-  reverb.connect(reverbGain);
-  reverbGain.connect(panner);
+  oscClick.start(now);
+  oscClack.start(now);
+  oscBottom.start(now);
+  
+  oscClick.stop(now + 0.01);
+  oscClack.stop(now + 0.025);
+  oscBottom.stop(now + 0.045);
 }
 
 // ─── Milestone / success sounds ───────────────────────────────────────────────
