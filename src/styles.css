@@ -7,7 +7,7 @@
   --text-color: #ffffff;
   --glass: rgba(255, 255, 255, 0.03);
   --glass-border: rgba(191, 0, 255, 0.15);
-  --bg-image: linear-gradient(to bottom, rgba(2, 2, 2, 0.4), rgba(2, 2, 2, 0.8)), url('./nettas_bg_new.jpg');
+  --bg-image: linear-gradient(to bottom, rgba(2, 2, 2, 0.4), rgba(2, 2, 2, 0.8)), url('/nettas_bg_new.jpg');
   --bg-size: cover;
   --bg-anim: none;
   --intensity: 1;

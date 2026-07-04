@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "canvas-confetti": "^1.9.3",
-    "firebase": "^10.14.0"
+    "firebase": "^12.15.0"
   },
   "devDependencies": {
     "@types/canvas-confetti": "^1.6.4",

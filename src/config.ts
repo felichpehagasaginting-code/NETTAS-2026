@@ -9,7 +9,7 @@ export const firebaseConfig = {
   measurementId: 'G-Y9HWJ3BEMD',
 };
 
-export const ADMIN_HASH = '858ec7507d52048a43a9ac6fc09b39ed8180a626d8add7785dcca01caf77272d';
+export const ADMIN_HASH = 'nettas2026';
 
 export const PENTATONIC_SCALE = [
   220.0, 261.63, 293.66, 329.63, 392.0, 440.0, 523.25, 587.33, 659.25, 783.99, 880.0,
@@ -20,3 +20,8 @@ export const TAP_PARTICLE_TEXTS = ['+1', 'SYNCING...', 'DATA_PUSH', 'LINKED', 'A
 export const TAP_EMOJIS = ['🤩', '😂', '🔥', '🎉', '🚀', '💖', '😎', '🎊', '✨', '🥳', '💯'];
 
 export const FLOATING_EMOJIS = ['🎉', '🚀', '✨', '🎊', '🔥', '💎', '🥳'];
+
+export const AUTH_CONFIG = {
+  adminEmails: ['admin@nettas2026.id'], // Add admin emails here
+  enableAnonymousAuth: true,
+};

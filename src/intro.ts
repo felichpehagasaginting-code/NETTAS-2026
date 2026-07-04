@@ -1,6 +1,10 @@
 import { state, db, ref, get, set, onDisconnect } from './firebase';
 import { resumeAudio, initVisualizer, bgMusic } from './audio';
 
+function sanitizeName(raw: string): string {
+  return raw.replace(/[^a-zA-Z0-9_\-\s]/g, '').slice(0, 12).trim() || 'ANON';
+}
+
 export function initIntro(): void {
   document.getElementById('btn-enter-system')!.addEventListener('click', handleEnter);
   document.getElementById('btn-intro-logout')!.addEventListener('click', logoutNode);
@@ -69,17 +73,18 @@ async function handleEnter(): Promise<void> {
       completeLogin(state.myNodeId, state.myNodeName, 0);
     }
   } else {
-    const inputName = (
+    const rawName = (
       document.getElementById('node-name-input') as HTMLInputElement
-    ).value.trim().toUpperCase();
-    if (!inputName) {
-      alert('NAMA NODE TIDAK BOLEH KOSONG!');
+    ).value.trim();
+    const inputName = sanitizeName(rawName).toUpperCase();
+    if (!inputName || inputName.length < 2) {
+      alert('NAMA NODE HARUS MINIMAL 2 KARAKTER!');
       return;
     }
 
     const normalizedId = inputName.toLowerCase().replace(/[^a-z0-9_-]/g, '');
-    if (normalizedId.length < 3) {
-      alert('NAMA NODE HARUS MINIMAL 3 KARAKTER ALFANUMERIK!');
+    if (normalizedId.length < 2) {
+      alert('NAMA NODE HARUS MINIMAL 2 KARAKTER ALFANUMERIK!');
       return;
     }
 

@@ -1,27 +1,42 @@
+import { state, onValue, set, ref, db, get, clicksRef, configRef, configThemeRef, configBgmRef } from './firebase';
 import { ADMIN_HASH } from './config';
-import { state, clicksRef, configRef, configThemeRef, configBgmRef, db, ref, set, onValue, usersRef } from './firebase';
 
-let adminPinOverlay: HTMLElement;
 let adminOverlay: HTMLElement;
-let adminPinInput: HTMLInputElement;
-let adminPinError: HTMLElement;
+let adminPinOverlay: HTMLElement;
+let analyticsInterval: ReturnType<typeof setInterval> | null = null;
+
+function escapeHTML(str: string): string {
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
 
 export function initAdmin(): void {
-  adminPinOverlay = document.getElementById('admin-pin-overlay')!;
   adminOverlay = document.getElementById('admin-overlay')!;
-  adminPinInput = document.getElementById('admin-pin-input') as HTMLInputElement;
-  adminPinError = document.getElementById('admin-pin-error')!;
+  adminPinOverlay = document.getElementById('admin-pin-overlay')!;
 
-  document.getElementById('admin-trigger')!.addEventListener('click', handleAdminTrigger);
-
-  adminPinInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') document.getElementById('btn-admin-pin-confirm')!.click();
+  let adminClickCount = 0;
+  let adminClickTimer: ReturnType<typeof setTimeout> | null = null;
+  document.getElementById('admin-trigger')!.addEventListener('click', () => {
+    adminClickCount++;
+    if (adminClickCount === 1) {
+      adminClickTimer = setTimeout(() => { adminClickCount = 0; }, 500);
+    } else if (adminClickCount >= 2) {
+      if (adminClickTimer) clearTimeout(adminClickTimer);
+      adminClickCount = 0;
+      openAdminAccess();
+    }
   });
 
-  document.getElementById('btn-admin-pin-confirm')!.addEventListener('click', handlePinConfirm);
-  document.getElementById('btn-admin-pin-cancel')!.addEventListener('click', closePin);
+  document.getElementById('btn-admin-pin-confirm')!.addEventListener('click', handlePinLogin);
+  document.getElementById('btn-admin-pin-cancel')!.addEventListener('click', closePinLogin);
+  const pinInput = document.getElementById('admin-pin-input') as HTMLInputElement;
+  if (pinInput) {
+    pinInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') document.getElementById('btn-admin-pin-confirm')!.click();
+    });
+  }
 
   document.getElementById('btn-admin-close')!.addEventListener('click', closeAdmin);
+  document.getElementById('btn-admin-logout')!.addEventListener('click', handleAdminLogout);
 
   document.getElementById('btn-admin-set-target')!.addEventListener('click', handleSetTarget);
   document.getElementById('btn-admin-set-clicks')!.addEventListener('click', handleSetClicks);
@@ -35,60 +50,52 @@ export function initAdmin(): void {
     if (e.target === adminOverlay) closeAdmin();
   });
 
-  onValue(usersRef, (snap) => {
+  document.getElementById('btn-admin-export-csv')!.addEventListener('click', handleExportCsv);
+
+  onValue(ref(db, 'users'), (snap) => {
     renderUsersList(snap);
   });
 }
 
-let adminClickCount = 0;
-let adminClickTimer: ReturnType<typeof setTimeout> | null = null;
-
-function handleAdminTrigger(): void {
-  adminClickCount++;
-  if (adminClickCount === 1) {
-    adminClickTimer = setTimeout(() => {
-      adminClickCount = 0;
-    }, 500);
-  } else if (adminClickCount >= 2) {
-    if (adminClickTimer) clearTimeout(adminClickTimer);
-    adminClickCount = 0;
-    openAdminPin();
+function openAdminAccess(): void {
+  if (state.isAdmin) {
+    openAdminPanel();
+  } else {
+    openPinLogin();
   }
 }
 
-function openAdminPin(): void {
+function openPinLogin(): void {
   adminPinOverlay.classList.add('show');
-  adminPinInput.value = '';
-  adminPinError.textContent = '';
-  setTimeout(() => adminPinInput.focus(), 100);
+  (document.getElementById('admin-pin-input') as HTMLInputElement).value = '';
+  document.getElementById('admin-pin-error')!.textContent = '';
+  setTimeout(() => (document.getElementById('admin-pin-input') as HTMLInputElement).focus(), 100);
 }
 
-function closePin(): void {
+function closePinLogin(): void {
   adminPinOverlay.classList.remove('show');
 }
 
-async function sha256(message: string): Promise<string> {
-  const msgBuffer = new TextEncoder().encode(message);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
-}
-
-async function handlePinConfirm(): Promise<void> {
-  const pinInput = adminPinInput.value.trim();
-  if (!pinInput) return;
-  const hash = await sha256(pinInput);
-  if (hash === ADMIN_HASH) {
-    adminPinOverlay.classList.remove('show');
+function handlePinLogin(): void {
+  const pin = (document.getElementById('admin-pin-input') as HTMLInputElement).value;
+  const errorEl = document.getElementById('admin-pin-error')!;
+  if (!pin) {
+    errorEl.textContent = '⚠ Masukkan PIN administrator.';
+    return;
+  }
+  if (pin === ADMIN_HASH) {
+    state.isAdmin = true;
+    closePinLogin();
     openAdminPanel();
   } else {
-    adminPinError.textContent = '⚠ Sandi salah. Akses ditolak.';
-    adminPinInput.value = '';
-    adminPinInput.focus();
-    setTimeout(() => {
-      adminPinError.textContent = '';
-    }, 3000);
+    errorEl.textContent = '⚠ PIN salah.';
   }
+}
+
+function handleAdminLogout(): void {
+  state.isAdmin = false;
+  closeAdmin();
+  closePinLogin();
 }
 
 function openAdminPanel(): void {
@@ -102,10 +109,46 @@ function openAdminPanel(): void {
   (document.getElementById('admin-theme-select') as HTMLSelectElement).value = currentTheme;
   clearAdminMessages();
   adminOverlay.classList.add('show');
+  startAnalyticsUpdates();
+}
+
+function startAnalyticsUpdates(): void {
+  if (analyticsInterval) clearInterval(analyticsInterval);
+  updateAnalytics();
+  analyticsInterval = setInterval(updateAnalytics, 3000);
+}
+
+function updateAnalytics(): void {
+  const tpm = state.lastClicksCount > 0 ? state.hypeSpeed : 0;
+  const tpmEl = document.getElementById('analytics-tpm');
+  if (tpmEl) tpmEl.textContent = String(tpm * 60);
+
+  const nodesEl = document.getElementById('analytics-nodes');
+  const presenceCount = document.getElementById('presence-count')?.textContent || '0';
+  if (nodesEl) nodesEl.textContent = presenceCount;
+
+  const avgEl = document.getElementById('analytics-avg');
+  const nodeCount = parseInt(presenceCount) || 1;
+  if (avgEl) avgEl.textContent = Math.round(state.currentCount / nodeCount).toLocaleString();
+
+  const ttgEl = document.getElementById('analytics-ttg');
+  if (ttgEl && tpm > 0) {
+    const remaining = Math.max(0, state.target - state.currentCount);
+    const seconds = Math.round(remaining / tpm);
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    ttgEl.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+  } else if (ttgEl) {
+    ttgEl.textContent = '--:--';
+  }
 }
 
 function closeAdmin(): void {
   adminOverlay.classList.remove('show');
+  if (analyticsInterval) {
+    clearInterval(analyticsInterval);
+    analyticsInterval = null;
+  }
 }
 
 function showAdminMsg(elId: string, message: string, type: 'success' | 'error'): void {
@@ -137,9 +180,7 @@ function handleSetTarget(): void {
     return;
   }
   set(configRef, newTarget)
-    .then(() =>
-      showAdminMsg('msg-target', `✓ Target diperbarui ke ${newTarget.toLocaleString()} klik.`, 'success'),
-    )
+    .then(() => showAdminMsg('msg-target', `✓ Target diperbarui ke ${newTarget.toLocaleString()} klik.`, 'success'))
     .catch(() => showAdminMsg('msg-target', '✗ Gagal memperbarui target. Cek koneksi.', 'error'));
 }
 
@@ -151,9 +192,7 @@ function handleSetClicks(): void {
     return;
   }
   set(clicksRef, newClicks)
-    .then(() =>
-      showAdminMsg('msg-clicks', `✓ Total klik diperbarui ke ${newClicks.toLocaleString()}.`, 'success'),
-    )
+    .then(() => showAdminMsg('msg-clicks', `✓ Total klik diperbarui ke ${newClicks.toLocaleString()}.`, 'success'))
     .catch(() => showAdminMsg('msg-clicks', '✗ Gagal memperbarui total klik.', 'error'));
 }
 
@@ -178,12 +217,7 @@ function handleSetBgm(): void {
 }
 
 function handleReset(): void {
-  if (
-    !confirm(
-      '⚠ Anda yakin ingin me-reset TOTAL progres aktivasi ke 0? (Data user/node tidak akan terhapus). Tindakan ini tidak dapat dibatalkan!',
-    )
-  )
-    return;
+  if (!confirm('⚠ Anda yakin ingin me-reset TOTAL progres aktivasi ke 0? Tindakan ini tidak dapat dibatalkan!')) return;
   state.isFinished = false;
   state.displayedMilestones.clear();
   document.getElementById('victory-modal')!.classList.remove('show');
@@ -197,7 +231,6 @@ function handleReset(): void {
 
 function handleResetUsers(): void {
   if (!confirm('⚠ Anda yakin ingin menghapus SEMUA user node terdaftar?')) return;
-
   set(ref(db, 'users'), null)
     .then(() => showAdminMsg('msg-action', '✓ Semua user node berhasil dihapus.', 'success'))
     .catch(() => showAdminMsg('msg-action', '✗ Gagal menghapus user node. Cek koneksi.', 'error'));
@@ -211,6 +244,24 @@ function handleForceWin(): void {
       adminOverlay.classList.remove('show');
     })
     .catch(() => showAdminMsg('msg-action', '✗ Gagal. Cek koneksi.', 'error'));
+}
+
+function handleExportCsv(): void {
+  get(ref(db, 'users')).then((snap) => {
+    const rows: string[] = ['id,name,clicks'];
+    snap.forEach((child: any) => {
+      const u = child.val();
+      rows.push(`${child.key},${u.name || 'ANON'},${u.clicks || 0}`);
+    });
+    const blob = new Blob([rows.join('\n')], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `nettas-export-${Date.now()}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showAdminMsg('msg-action', '✓ CSV berhasil diexport.', 'success');
+  }).catch(() => showAdminMsg('msg-action', '✗ Gagal export CSV.', 'error'));
 }
 
 function renderUsersList(snap: any): void {
@@ -241,12 +292,12 @@ function renderUsersList(snap: any): void {
 
     item.innerHTML = `
       <div style="display:flex; flex-direction:column;">
-        <span style="font-weight:bold; font-size:0.85rem; color:#fff;">${user.name}</span>
+        <span style="font-weight:bold; font-size:0.85rem; color:#fff;">${escapeHTML(user.name)}</span>
         <span style="font-size:0.7rem; color:rgba(255,255,255,0.5);">${user.clicks || 0} clicks</span>
       </div>
       <div style="display:flex; gap:0.3rem;">
-        <button class="admin-btn-action-reset" data-id="${user.id}" style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); color:#fff; border-radius:4px; font-size:0.65rem; padding:0.2rem 0.5rem; cursor:pointer;">RESET</button>
-        <button class="admin-btn-action-delete" data-id="${user.id}" style="background:rgba(255,51,102,0.2); border:1px solid rgba(255,51,102,0.4); color:#ff3366; border-radius:4px; font-size:0.65rem; padding:0.2rem 0.5rem; cursor:pointer;">HAPUS</button>
+        <button class="admin-btn-action-reset" data-id="${escapeHTML(user.id)}" style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); color:#fff; border-radius:4px; font-size:0.65rem; padding:0.2rem 0.5rem; cursor:pointer;">RESET</button>
+        <button class="admin-btn-action-delete" data-id="${escapeHTML(user.id)}" style="background:rgba(255,51,102,0.2); border:1px solid rgba(255,51,102,0.4); color:#ff3366; border-radius:4px; font-size:0.65rem; padding:0.2rem 0.5rem; cursor:pointer;">HAPUS</button>
       </div>
     `;
     usersContainer.appendChild(item);

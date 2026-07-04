@@ -1,33 +1,42 @@
 {
   "rules": {
     "global_clicks": {
-      ".read": true,
-      ".write": "newData.isNumber() && newData.val() >= 0"
+      ".read": "auth != null",
+      ".write": "auth != null && newData.isNumber() && newData.val() >= 0"
+    },
+    "counter_shards": {
+      ".read": "auth != null",
+      ".write": "auth != null"
     },
     "config": {
-      ".read": true,
+      ".read": "auth != null",
       "target_clicks": {
-        ".write": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 999999"
+        ".write": "auth != null && newData.isNumber() && newData.val() >= 1 && newData.val() <= 999999"
       },
       "theme": {
-        ".write": "newData.isString()"
+        ".write": "auth != null && newData.isString()"
       },
       "bgm_url": {
-        ".write": "newData.isString()"
+        ".write": "auth != null && newData.isString()"
       }
     },
     "presence": {
-      ".read": true,
+      ".read": "auth != null",
       "$node_id": {
-        ".write": "(!newData.exists() || (newData.val() === true && $node_id.length > 0))"
+        ".write": "auth != null && newData.isString()",
+        ".validate": "newData.isString()"
       }
     },
     "users": {
       ".indexOn": ["clicks"],
       "$node_id": {
-        ".read": true,
-        ".write": "!newData.exists() || (newData.child('clicks').isNumber() && newData.child('name').isString())"
+        ".read": "auth != null",
+        ".write": "auth != null && newData.hasChildren(['name', 'clicks']) && newData.child('clicks').isNumber() && newData.child('name').isString()"
       }
+    },
+    "admins": {
+      ".read": "auth != null",
+      ".write": "auth != null"
     }
   }
 }

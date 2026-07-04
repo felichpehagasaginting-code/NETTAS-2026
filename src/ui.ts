@@ -1,7 +1,7 @@
 import {
   state, clicksRef, configRef, configThemeRef, configBgmRef,
   db, ref, set, update, onValue, runTransaction, topUsersQuery,
-  connectedRef, presenceRef, onDisconnect,
+  connectedRef, presenceRef, onDisconnect, tapDistributed,
 } from './firebase';
 import { playTapSound, playMilestoneSound, playSuccessSound, playPartyHorn, bgMusic } from './audio';
 import {
@@ -9,6 +9,7 @@ import {
   triggerImpact, spawnFallingEmojiOnClick, updateCanvasColor,
 } from './effects';
 import type { LeaderboardEntry } from './types';
+import { BADGE_DEFS } from './types';
 
 let targetCount = 2026;
 
@@ -78,16 +79,52 @@ export function initUI(): void {
   startHypeMeter();
 }
 
+function checkBadges(clicks: number): string[] {
+  const newBadges: string[] = [];
+  if (clicks >= 1) newBadges.push('first_tap');
+  if (clicks >= 10) newBadges.push('tap_10');
+  if (clicks >= 50) newBadges.push('tap_50');
+  if (clicks >= 100) newBadges.push('tap_100');
+  if (clicks >= 500) newBadges.push('tap_500');
+  return newBadges;
+}
+
+function showBadgeUnlock(badgeKey: string): void {
+  const def = BADGE_DEFS[badgeKey];
+  if (!def) return;
+  const overlay = document.getElementById('milestone-overlay')!;
+  const titleEl = document.getElementById('milestone-title')!;
+  const iconEl = document.getElementById('milestone-icon')!;
+  iconEl.textContent = def.icon;
+  titleEl.innerHTML = `${def.label}<br><span style="font-size:0.7rem;font-weight:400;opacity:0.6">${def.desc}</span>`;
+  overlay.classList.add('show');
+  setTimeout(() => overlay.classList.remove('show'), 2500);
+}
+
 function handleTap(e: PointerEvent): void {
   if (state.isFinished) return;
-  playTapSound();
+  playTapSound(e.clientX, e.clientY);
   if (navigator.vibrate) navigator.vibrate(50);
 
   state.myLocalClicks++;
+  const earnedBadges = checkBadges(state.myLocalClicks);
+  const newBadges = earnedBadges.filter((b) => !state.myBadges.includes(b));
+  if (newBadges.length > 0) {
+    state.myBadges = [...state.myBadges, ...newBadges];
+    newBadges.forEach(showBadgeUnlock);
+  }
   renderLeaderboard();
 
-  runTransaction(clicksRef, (curr: number) => (curr || 0) + 1);
-  queueTapsSync();
+  if (state.myNodeName) {
+    tapDistributed({ nodeName: state.myNodeName, nodeId: state.myNodeId })
+      .catch(() => {
+        runTransaction(clicksRef, (curr: number) => (curr || 0) + 1);
+        queueTapsSync();
+      });
+  } else {
+    runTransaction(clicksRef, (curr: number) => (curr || 0) + 1);
+    queueTapsSync();
+  }
 
   createTapEffect(e.clientX, e.clientY, state.myNodeName);
   createShockwave(e.clientX, e.clientY);
@@ -217,10 +254,22 @@ function renderLeaderboard(): void {
   displayUsers.forEach((u: any) => {
     const li = document.createElement('li');
     li.className = 'leaderboard-item' + (u.id === state.myNodeId ? ' is-me' : '');
-    li.innerHTML = `
-      <span class="leaderboard-name">${u.name}</span>
-      <span class="leaderboard-val">${(u.clicks || 0).toLocaleString()}</span>
-    `;
+    const nameSpan = document.createElement('span');
+    nameSpan.className = 'leaderboard-name';
+    nameSpan.textContent = u.name;
+    if (u.badges && u.badges.length > 0) {
+      const badgeIcon = document.createElement('span');
+      badgeIcon.style.marginLeft = '0.3rem';
+      badgeIcon.style.fontSize = '0.7rem';
+      const lastBadge = u.badges[u.badges.length - 1];
+      badgeIcon.textContent = BADGE_DEFS[lastBadge]?.icon || '';
+      nameSpan.appendChild(badgeIcon);
+    }
+    const valSpan = document.createElement('span');
+    valSpan.className = 'leaderboard-val';
+    valSpan.textContent = (u.clicks || 0).toLocaleString();
+    li.appendChild(nameSpan);
+    li.appendChild(valSpan);
     listEl.appendChild(li);
   });
 }
@@ -233,6 +282,8 @@ function startHypeMeter(): void {
 
     const clickDiff = state.currentCount - state.lastClicksCount;
     const rawTapsPerSec = clickDiff >= 0 ? Math.round(clickDiff / timeDiffSec) : 0;
+
+    state.hypeSpeed = rawTapsPerSec;
 
     const hypeVal = document.getElementById('hype-speed-val');
     if (hypeVal) hypeVal.innerText = String(rawTapsPerSec);
@@ -266,6 +317,7 @@ function syncTapsToFirebase(): void {
   update(refPath, {
     name: state.myNodeName,
     clicks: state.myLocalClicks,
+    badges: state.myBadges,
   })
     .then(() => {
       state.lastSyncClicks = state.myLocalClicks;

@@ -3,7 +3,7 @@ import { PENTATONIC_SCALE } from './config';
 
 export const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
 
-export let bgMusic = new Audio(
+export const bgMusic = new Audio(
   'https://cdn.pixabay.com/audio/2022/03/24/audio_7306283b27.mp3',
 );
 bgMusic.loop = true;
@@ -16,6 +16,8 @@ let visualizerInited = false;
 
 const vCanvas = document.getElementById('visualizer') as HTMLCanvasElement;
 const vCtx = vCanvas?.getContext('2d');
+
+let noteIndex = 0;
 
 export function initVisualizer(): void {
   if (!audioCtx || !vCanvas || !vCtx) return;
@@ -70,111 +72,124 @@ export function toggleMusic(): void {
   }
 }
 
-export function playTapSound(): void {
+export function playTapSound(clientX?: number, _clientY?: number): void {
   if (audioCtx.state === 'suspended') audioCtx.resume();
 
   const progress = state.currentProgressPercentage / 100;
-  const clickFreq = 2200 + progress * 2000;
-  const clackFreq = 450 + progress * 450;
-  const bottomFreq = 130 + progress * 130;
+  const panValue = clientX ? ((clientX / window.innerWidth) * 2 - 1) * 0.6 : 0;
+  const scaleIndex = noteIndex % PENTATONIC_SCALE.length;
+  const baseFreq = PENTATONIC_SCALE[scaleIndex];
+  noteIndex++;
 
-  const oscClick = audioCtx.createOscillator();
-  const clickGain = audioCtx.createGain();
-  const clickFilter = audioCtx.createBiquadFilter();
+  const masterGain = audioCtx.createGain();
+  masterGain.gain.setValueAtTime(0.3 + progress * 0.15, audioCtx.currentTime);
 
-  oscClick.type = 'triangle';
-  oscClick.frequency.setValueAtTime(clickFreq, audioCtx.currentTime);
-  oscClick.frequency.exponentialRampToValueAtTime(clickFreq * 1.1, audioCtx.currentTime + 0.005);
+  const panner = audioCtx.createStereoPanner();
+  panner.pan.setValueAtTime(panValue, audioCtx.currentTime);
+  masterGain.connect(panner);
+  panner.connect(audioCtx.destination);
 
-  clickFilter.type = 'bandpass';
-  clickFilter.frequency.setValueAtTime(clickFreq, audioCtx.currentTime);
-  clickFilter.Q.setValueAtTime(12, audioCtx.currentTime);
-
-  clickGain.gain.setValueAtTime(0.45, audioCtx.currentTime);
-  clickGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.006);
-
-  oscClick.connect(clickFilter);
-  clickFilter.connect(clickGain);
-  clickGain.connect(audioCtx.destination);
+  const oscMelody = audioCtx.createOscillator();
+  const melodyGain = audioCtx.createGain();
+  oscMelody.type = 'triangle';
+  oscMelody.frequency.setValueAtTime(baseFreq, audioCtx.currentTime);
+  oscMelody.frequency.exponentialRampToValueAtTime(baseFreq * 1.08, audioCtx.currentTime + 0.003);
+  melodyGain.gain.setValueAtTime(0.35, audioCtx.currentTime);
+  melodyGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.08 + progress * 0.04);
+  oscMelody.connect(melodyGain);
+  melodyGain.connect(masterGain);
+  oscMelody.start();
+  oscMelody.stop(audioCtx.currentTime + 0.12);
 
   const noise = audioCtx.createBufferSource();
   const noiseGain = audioCtx.createGain();
   const noiseFilter = audioCtx.createBiquadFilter();
-
-  const bufferSize = audioCtx.sampleRate * 0.006;
+  const bufferSize = audioCtx.sampleRate * 0.008;
   const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
   const data = buffer.getChannelData(0);
   for (let i = 0; i < bufferSize; i++) {
     data[i] = Math.random() * 2 - 1;
   }
   noise.buffer = buffer;
-
   noiseFilter.type = 'highpass';
-  noiseFilter.frequency.setValueAtTime(clickFreq * 0.95, audioCtx.currentTime);
-  noiseFilter.Q.setValueAtTime(3.0, audioCtx.currentTime);
-
-  noiseGain.gain.setValueAtTime(0.18, audioCtx.currentTime);
+  noiseFilter.frequency.setValueAtTime(baseFreq * 0.9, audioCtx.currentTime);
+  noiseFilter.Q.setValueAtTime(4, audioCtx.currentTime);
+  noiseGain.gain.setValueAtTime(0.15, audioCtx.currentTime);
   noiseGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.006);
-
   noise.connect(noiseFilter);
   noiseFilter.connect(noiseGain);
-  noiseGain.connect(audioCtx.destination);
-
-  const oscClack = audioCtx.createOscillator();
-  const clackGain = audioCtx.createGain();
-  const clackFilter = audioCtx.createBiquadFilter();
-
-  oscClack.type = 'triangle';
-  oscClack.frequency.setValueAtTime(clackFreq, audioCtx.currentTime);
-  oscClack.frequency.exponentialRampToValueAtTime(clackFreq * 0.85, audioCtx.currentTime + 0.015);
-
-  clackFilter.type = 'lowpass';
-  clackFilter.frequency.setValueAtTime(clackFreq * 2.0, audioCtx.currentTime);
-  clackFilter.Q.setValueAtTime(1.5, audioCtx.currentTime);
-
-  clackGain.gain.setValueAtTime(0.25, audioCtx.currentTime);
-  clackGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.018);
-
-  oscClack.connect(clackFilter);
-  clackFilter.connect(clackGain);
-  clackGain.connect(audioCtx.destination);
-
-  const oscBottom = audioCtx.createOscillator();
-  const bottomGain = audioCtx.createGain();
-
-  oscBottom.type = 'sine';
-  oscBottom.frequency.setValueAtTime(bottomFreq, audioCtx.currentTime);
-  oscBottom.frequency.exponentialRampToValueAtTime(bottomFreq * 0.7, audioCtx.currentTime + 0.035);
-
-  bottomGain.gain.setValueAtTime(0.15, audioCtx.currentTime);
-  bottomGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.038);
-
-  oscBottom.connect(bottomGain);
-  bottomGain.connect(audioCtx.destination);
-
+  noiseGain.connect(masterGain);
   noise.start();
-  oscClick.start();
-  oscClack.start();
-  oscBottom.start();
 
-  oscClick.stop(audioCtx.currentTime + 0.01);
-  oscClack.stop(audioCtx.currentTime + 0.025);
-  oscBottom.stop(audioCtx.currentTime + 0.045);
+  const oscBass = audioCtx.createOscillator();
+  const bassGain = audioCtx.createGain();
+  oscBass.type = 'sine';
+  const bassFreq = baseFreq * 0.5;
+  oscBass.frequency.setValueAtTime(bassFreq, audioCtx.currentTime);
+  oscBass.frequency.exponentialRampToValueAtTime(bassFreq * 0.6, audioCtx.currentTime + 0.04);
+  bassGain.gain.setValueAtTime(0.12 + progress * 0.1, audioCtx.currentTime);
+  bassGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
+  oscBass.connect(bassGain);
+  bassGain.connect(masterGain);
+  oscBass.start();
+  oscBass.stop(audioCtx.currentTime + 0.06);
+
+  if (progress > 0.5 && Math.random() > 0.7) {
+    const oscHarmony = audioCtx.createOscillator();
+    const harmGain = audioCtx.createGain();
+    oscHarmony.type = 'sine';
+    oscHarmony.frequency.setValueAtTime(baseFreq * 1.5, audioCtx.currentTime);
+    harmGain.gain.setValueAtTime(0, audioCtx.currentTime);
+    harmGain.gain.linearRampToValueAtTime(0.08, audioCtx.currentTime + 0.02);
+    harmGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.15);
+    oscHarmony.connect(harmGain);
+    harmGain.connect(masterGain);
+    oscHarmony.start();
+    oscHarmony.stop(audioCtx.currentTime + 0.18);
+  }
+
+  const reverbGain = audioCtx.createGain();
+  reverbGain.gain.setValueAtTime(0.1 + progress * 0.2, audioCtx.currentTime);
+  reverbGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.15);
+  const dryGain = audioCtx.createGain();
+  dryGain.gain.setValueAtTime(0.8, audioCtx.currentTime);
+  masterGain.connect(dryGain);
+  dryGain.connect(panner);
+
+  const reverbLen = audioCtx.sampleRate * 0.12;
+  const reverbBuffer = audioCtx.createBuffer(2, reverbLen, audioCtx.sampleRate);
+  for (let ch = 0; ch < 2; ch++) {
+    const channelData = reverbBuffer.getChannelData(ch);
+    for (let i = 0; i < reverbLen; i++) {
+      channelData[i] = (Math.random() * 2 - 1) * (1 - i / reverbLen);
+    }
+  }
+  const reverb = audioCtx.createConvolver();
+  reverb.buffer = reverbBuffer;
+  masterGain.connect(reverb);
+  reverb.connect(reverbGain);
+  reverbGain.connect(panner);
 }
 
 export function playMilestoneSound(): void {
   if (audioCtx.state === 'suspended') audioCtx.resume();
-  const osc = audioCtx.createOscillator();
-  const gain = audioCtx.createGain();
-  osc.type = 'sine';
-  osc.frequency.setValueAtTime(120, audioCtx.currentTime);
-  osc.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 1.2);
-  gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
-  gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1.2);
-  osc.connect(gain);
-  gain.connect(audioCtx.destination);
-  osc.start();
-  osc.stop(audioCtx.currentTime + 1.3);
+  const notes = [261.63, 329.63, 392.0, 523.25];
+  notes.forEach((freq, i) => {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    const panner = audioCtx.createStereoPanner();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(freq, audioCtx.currentTime + i * 0.12);
+    gain.gain.setValueAtTime(0, audioCtx.currentTime + i * 0.12);
+    gain.gain.linearRampToValueAtTime(0.15, audioCtx.currentTime + i * 0.12 + 0.04);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + i * 0.12 + 0.4);
+    panner.pan.setValueAtTime(Math.sin(i * 1.5) * 0.5, audioCtx.currentTime + i * 0.12);
+    osc.connect(gain);
+    gain.connect(panner);
+    panner.connect(audioCtx.destination);
+    osc.start(audioCtx.currentTime + i * 0.12);
+    osc.stop(audioCtx.currentTime + i * 0.12 + 0.4);
+  });
 }
 
 export function playSuccessSound(): void {
@@ -182,13 +197,16 @@ export function playSuccessSound(): void {
   notes.forEach((freq, i) => {
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
+    const panner = audioCtx.createStereoPanner();
     osc.type = 'triangle';
     osc.frequency.setValueAtTime(freq, audioCtx.currentTime + i * 0.1);
     gain.gain.setValueAtTime(0, audioCtx.currentTime + i * 0.1);
     gain.gain.linearRampToValueAtTime(0.1, audioCtx.currentTime + i * 0.1 + 0.05);
     gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + i * 0.1 + 0.5);
+    panner.pan.setValueAtTime(Math.sin(i * 0.8) * 0.7, audioCtx.currentTime + i * 0.1);
     osc.connect(gain);
-    gain.connect(audioCtx.destination);
+    gain.connect(panner);
+    panner.connect(audioCtx.destination);
     osc.start(audioCtx.currentTime + i * 0.1);
     osc.stop(audioCtx.currentTime + i * 0.1 + 0.5);
   });
@@ -200,6 +218,7 @@ export function playPartyHorn(): void {
   const osc = audioCtx.createOscillator();
   const gain = audioCtx.createGain();
   const filter = audioCtx.createBiquadFilter();
+  const panner = audioCtx.createStereoPanner();
 
   osc.type = 'sawtooth';
   osc.frequency.setValueAtTime(200, audioCtx.currentTime);
@@ -213,9 +232,12 @@ export function playPartyHorn(): void {
   gain.gain.linearRampToValueAtTime(0.3, audioCtx.currentTime + 0.05);
   gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.8);
 
+  panner.pan.setValueAtTime(Math.random() * 0.8 - 0.4, audioCtx.currentTime);
+
   osc.connect(filter);
   filter.connect(gain);
-  gain.connect(audioCtx.destination);
+  gain.connect(panner);
+  panner.connect(audioCtx.destination);
 
   osc.start();
   osc.stop(audioCtx.currentTime + 0.8);

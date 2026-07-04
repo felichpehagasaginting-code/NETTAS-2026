@@ -14,6 +14,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700&family=Outfit:wght@300;600;800&display=swap" rel="stylesheet">
     <link rel="icon" href="./nettas_logo_new.png" type="image/png">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 </head>
 <body>
     <div id="intro-overlay" class="intro-overlay">
@@ -58,7 +61,10 @@
         <div class="admin-modal">
             <div class="admin-header">
                 <span class="admin-title">⚙ ADMIN PANEL</span>
-                <button class="admin-close" id="btn-admin-close">✕</button>
+                <div style="display:flex; gap:0.4rem;">
+                    <button class="admin-btn" id="btn-admin-logout" style="width:auto; padding:0.3rem 0.7rem; font-size:0.6rem; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.15); color:rgba(255,255,255,0.6);">LOGOUT</button>
+                    <button class="admin-close" id="btn-admin-close">✕</button>
+                </div>
             </div>
             <div class="admin-section">
                 <p class="admin-section-label">🎯 Target Aktivasi Saat Ini</p>
@@ -99,6 +105,29 @@
                     <button class="admin-btn admin-btn-primary" id="btn-admin-set-bgm" style="width: auto; padding: 0.75rem 1.2rem; white-space: nowrap;">SET BGM</button>
                 </div>
                 <p class="admin-status-msg" id="msg-bgm"></p>
+            </div>
+            <hr class="admin-divider">
+            <div class="admin-section">
+                <p class="admin-section-label">📊 ANALYTICS REAL-TIME</p>
+                <div id="analytics-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-bottom: 0.5rem;">
+                    <div style="background: rgba(255,255,255,0.03); border-radius: 8px; padding: 0.7rem; text-align: center;">
+                        <p style="font-size: 0.55rem; color: rgba(255,255,255,0.3); letter-spacing: 0.1rem; text-transform: uppercase;">Taps/min</p>
+                        <p id="analytics-tpm" style="font-size: 1.5rem; font-weight: 800; color: var(--primary-neon);">0</p>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.03); border-radius: 8px; padding: 0.7rem; text-align: center;">
+                        <p style="font-size: 0.55rem; color: rgba(255,255,255,0.3); letter-spacing: 0.1rem; text-transform: uppercase;">Active Nodes</p>
+                        <p id="analytics-nodes" style="font-size: 1.5rem; font-weight: 800; color: var(--primary-neon);">0</p>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.03); border-radius: 8px; padding: 0.7rem; text-align: center;">
+                        <p style="font-size: 0.55rem; color: rgba(255,255,255,0.3); letter-spacing: 0.1rem; text-transform: uppercase;">Avg Tap/User</p>
+                        <p id="analytics-avg" style="font-size: 1.5rem; font-weight: 800; color: var(--primary-neon);">0</p>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.03); border-radius: 8px; padding: 0.7rem; text-align: center;">
+                        <p style="font-size: 0.55rem; color: rgba(255,255,255,0.3); letter-spacing: 0.1rem; text-transform: uppercase;">Time to Goal</p>
+                        <p id="analytics-ttg" style="font-size: 1.2rem; font-weight: 800; color: var(--primary-neon);">--:--</p>
+                    </div>
+                </div>
+                <button class="admin-btn admin-btn-primary" id="btn-admin-export-csv" style="font-size: 0.6rem; padding: 0.4rem;">EXPORT CSV</button>
             </div>
             <hr class="admin-divider">
             <div class="admin-section">

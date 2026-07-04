@@ -26,7 +26,7 @@ export function createShockwave(x: number, y: number): void {
 export function triggerImpact(): void {
   const flash = document.getElementById('flash-overlay')!;
   flash.style.animation = 'none';
-  flash.offsetHeight;
+  void flash.offsetHeight;
   flash.style.animation = 'flash-anim 0.2s ease-out forwards';
 
   document.body.classList.add('shake');
