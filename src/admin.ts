@@ -104,6 +104,22 @@ function switchBgmMode(): void {
   document.getElementById('bgm-mode-url')!.style.display = mode === 'url' ? '' : 'none';
 }
 
+async function updateBgmStatus(): Promise<void> {
+  const el = document.getElementById('bgm-status');
+  if (!el) return;
+  const [bgmSnap, ytSnap] = await Promise.all([get(configBgmRef), get(configYoutubeIdRef)]);
+  const bgmUrl = bgmSnap.val();
+  const ytId = ytSnap.val();
+  if (ytId) {
+    el.textContent = `🎵 YouTube: ${ytId}`;
+  } else if (bgmUrl) {
+    const label = bgmUrl.startsWith('https://firebasestorage') ? 'Upload' : 'MP3 URL';
+    el.textContent = `🎵 ${label}: ${bgmUrl.substring(0, 50)}...`;
+  } else {
+    el.textContent = '🎵 Tidak ada sumber musik dikonfigurasi.';
+  }
+}
+
 function openAdminPanel(): void {
   (document.getElementById('admin-target-input') as HTMLInputElement).value = String(state.target);
   (document.getElementById('admin-clicks-input') as HTMLInputElement).value = String(state.currentCount);
@@ -111,6 +127,7 @@ function openAdminPanel(): void {
   switchBgmMode();
   adminOverlay.classList.add('show');
   startAnalyticsUpdates();
+  updateBgmStatus();
 }
 
 function startAnalyticsUpdates(): void {
@@ -230,6 +247,7 @@ async function handleSetYoutube(): Promise<void> {
     set(configBgmRef, null),
   ]);
   showAdminMsg('msg-youtube', `✓ YouTube BGM diatur (video ID: ${videoId}).`, 'success');
+  updateBgmStatus();
 }
 
 async function handleSetBgm(): Promise<void> {
@@ -239,12 +257,18 @@ async function handleSetBgm(): Promise<void> {
     showAdminMsg('msg-bgm', '⚠ URL musik tidak boleh kosong.', 'error');
     return;
   }
+  // Detect YouTube URLs and reject with clear instruction
+  if (/(youtube\.com|youtu\.be)/i.test(bgmUrl)) {
+    showAdminMsg('msg-bgm', '⚠ Itu link YouTube! Gunakan mode "YouTube" di atas, bukan "URL MP3".', 'error');
+    return;
+  }
   await waitForAuth();
   await Promise.all([
     set(configBgmRef, bgmUrl),
     set(configYoutubeIdRef, null),
   ]);
   showAdminMsg('msg-bgm', '✓ URL BGM MP3 global diperbarui.', 'success');
+  updateBgmStatus();
 }
 
 async function handleUploadBgm(): Promise<void> {
@@ -274,6 +298,7 @@ async function handleUploadBgm(): Promise<void> {
     ]);
     showAdminMsg('msg-upload', `✓ File "${file.name}" berhasil diupload sebagai BGM.`, 'success');
     fileInput.value = '';
+    updateBgmStatus();
   } catch (err) {
     showAdminMsg('msg-upload', '✗ Gagal upload file. Cek koneksi dan izin Storage.', 'error');
   }
