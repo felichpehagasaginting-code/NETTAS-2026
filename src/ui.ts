@@ -200,17 +200,7 @@ function updateUI(count: number): void {
     els.liquidFill.style.clipPath = `inset(${100 - state.currentProgressPercentage}% 0 0 0)`;
   }
 
-  const floorProgress = Math.floor(state.currentProgressPercentage);
-  if (floorProgress >= 25 && floorProgress < 50 && !state.displayedMilestones.has(25)) {
-    state.displayedMilestones.add(25);
-    showMilestone(25, 'GRID CONNECTED<br>25% CHARGED', '🔌');
-  } else if (floorProgress >= 50 && floorProgress < 75 && !state.displayedMilestones.has(50)) {
-    state.displayedMilestones.add(50);
-    showMilestone(50, 'CORE SYNCHRONIZED<br>50% CHARGED', '🔄');
-  } else if (floorProgress >= 75 && floorProgress < 100 && !state.displayedMilestones.has(75)) {
-    state.displayedMilestones.add(75);
-    showMilestone(75, 'OVERLOAD DETECTED<br>75% CAPACITY', '⚡');
-  }
+
 
   if (state.currentProgressPercentage >= 100 && !state.isFinished) {
     if (!state.displayedMilestones.has(100)) {
