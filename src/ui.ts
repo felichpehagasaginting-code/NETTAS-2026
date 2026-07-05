@@ -1,6 +1,6 @@
 import {
   state, clicksRef, configRef, configThemeRef, configBgmRef, configVictoryBgmRef, configYoutubeIdRef, configMusicRef,
-  db, ref, onValue, set,
+  db, ref, onValue, runTransaction,
 } from './firebase';
 import { initYouTube, destroyYouTube, playYouTube, pauseYouTube, setYouTubeVolume, youTubeExists, isYouTubePlaying } from './youtube';
 import { initPresence, markTap, subscribePresenceCount, subscribeActiveCount } from './presence';
@@ -152,11 +152,7 @@ function handleTap(e: PointerEvent): void {
   playTapSound(e.clientX, e.clientY);
   if (navigator.vibrate) navigator.vibrate(50);
 
-  // Optimistic local increment — UI langsung naik
-  state.currentCount++;
-  updateUI(state.currentCount);
-  // Async write ke DB (abaikan error)
-  set(clicksRef, state.currentCount).catch(() => {});
+  runTransaction(clicksRef, (curr: number) => (curr || 0) + 1).catch(() => {});
 
   markTap();
   createTapEffect(e.clientX, e.clientY, '');
