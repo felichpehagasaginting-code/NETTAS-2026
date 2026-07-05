@@ -1,6 +1,6 @@
 import {
   state, clicksRef, configRef, configThemeRef, configBgmRef, configVictoryBgmRef, configYoutubeIdRef,
-  db, ref, onValue, runTransaction, tapDistributed,
+  db, ref, onValue, runTransaction,
 } from './firebase';
 import { initYouTube, destroyYouTube, playYouTube, setYouTubeVolume } from './youtube';
 import { initPresence, markTap, subscribePresenceCount, subscribeActiveCount } from './presence';
@@ -129,10 +129,9 @@ function handleTap(e: PointerEvent): void {
   playTapSound(e.clientX, e.clientY);
   if (navigator.vibrate) navigator.vibrate(50);
 
-  tapDistributed({})
-    .catch(() => {
-      runTransaction(clicksRef, (curr: number) => (curr || 0) + 1);
-    });
+  runTransaction(clicksRef, (curr: number) => (curr || 0) + 1).catch((err) => {
+    console.error('Gagal update clicks:', err);
+  });
 
   markTap();
   createTapEffect(e.clientX, e.clientY, '');
