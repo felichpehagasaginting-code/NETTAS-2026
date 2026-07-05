@@ -21,6 +21,9 @@
       },
       "victory_bgm_url": {
         ".write": "auth != null && newData.isString()"
+      },
+      "youtube_video_id": {
+        ".write": "auth != null && newData.isString()"
       }
     }
   }

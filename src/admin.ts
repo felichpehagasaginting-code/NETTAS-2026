@@ -1,4 +1,4 @@
-import { state, set, ref, db, get, clicksRef, configRef, configThemeRef, configBgmRef } from './firebase';
+import { state, set, ref, db, get, clicksRef, configRef, configThemeRef, configBgmRef, configVictoryBgmRef, configYoutubeIdRef } from './firebase';
 import { ADMIN_HASH } from './config';
 import { customConfirm } from './modal';
 import { toggleMusic } from './audio';
@@ -40,6 +40,8 @@ export function initAdmin(): void {
   document.getElementById('btn-admin-set-clicks')!.addEventListener('click', handleSetClicks);
   document.getElementById('btn-admin-set-theme')!.addEventListener('click', handleSetTheme);
   document.getElementById('btn-admin-set-bgm')!.addEventListener('click', handleSetBgm);
+  document.getElementById('btn-admin-set-victory-bgm')!.addEventListener('click', handleSetVictoryBgm);
+  document.getElementById('btn-admin-set-youtube')!.addEventListener('click', handleSetYoutube);
   document.getElementById('btn-admin-reset')!.addEventListener('click', handleReset);
   document.getElementById('btn-admin-force-win')!.addEventListener('click', handleForceWin);
   document.getElementById('btn-admin-music-toggle')!.addEventListener('click', handleMusicToggle);
@@ -141,7 +143,7 @@ function showAdminMsg(elId: string, message: string, type: 'success' | 'error'):
 }
 
 function clearAdminMessages(): void {
-  ['msg-target', 'msg-clicks', 'msg-theme', 'msg-bgm', 'msg-action'].forEach((id) => {
+  ['msg-target', 'msg-clicks', 'msg-theme', 'msg-bgm', 'msg-victory-bgm', 'msg-youtube', 'msg-action'].forEach((id) => {
     const el = document.getElementById(id);
     if (el) {
       el.className = 'admin-status-msg';
@@ -190,8 +192,52 @@ function handleSetBgm(): void {
     return;
   }
   set(configBgmRef, bgmUrl)
-    .then(() => showAdminMsg('msg-bgm', '✓ URL BGM global diperbarui.', 'success'))
-    .catch(() => showAdminMsg('msg-bgm', '✗ Gagal memperbarui URL BGM global.', 'error'));
+    .then(() => showAdminMsg('msg-bgm', '✓ URL BGM MP3 global diperbarui.', 'success'))
+    .catch(() => showAdminMsg('msg-bgm', '✗ Gagal memperbarui URL BGM MP3.', 'error'));
+}
+
+function handleSetVictoryBgm(): void {
+  const input = document.getElementById('admin-victory-bgm-input') as HTMLInputElement;
+  const url = input.value.trim();
+  if (!url) {
+    showAdminMsg('msg-victory-bgm', '⚠ URL musik kemenangan tidak boleh kosong.', 'error');
+    return;
+  }
+  set(configVictoryBgmRef, url)
+    .then(() => showAdminMsg('msg-victory-bgm', '✓ URL Victory BGM diperbarui.', 'success'))
+    .catch(() => showAdminMsg('msg-victory-bgm', '✗ Gagal memperbarui URL Victory BGM.', 'error'));
+}
+
+function extractYoutubeId(url: string): string | null {
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=)([a-zA-Z0-9_-]{11})/,
+    /(?:youtu\.be\/)([a-zA-Z0-9_-]{11})/,
+    /(?:youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/,
+    /(?:youtube\.com\/shorts\/)([a-zA-Z0-9_-]{11})/,
+  ];
+  for (const p of patterns) {
+    const m = url.match(p);
+    if (m) return m[1];
+  }
+  if (/^[a-zA-Z0-9_-]{11}$/.test(url)) return url;
+  return null;
+}
+
+function handleSetYoutube(): void {
+  const input = document.getElementById('admin-youtube-input') as HTMLInputElement;
+  const url = input.value.trim();
+  if (!url) {
+    showAdminMsg('msg-youtube', '⚠ URL YouTube tidak boleh kosong.', 'error');
+    return;
+  }
+  const videoId = extractYoutubeId(url);
+  if (!videoId) {
+    showAdminMsg('msg-youtube', '⚠ URL YouTube tidak valid. Gunakan link youtube.com/watch?v=...', 'error');
+    return;
+  }
+  set(configYoutubeIdRef, videoId)
+    .then(() => showAdminMsg('msg-youtube', `✓ YouTube BGM diatur (video ID: ${videoId}).`, 'success'))
+    .catch(() => showAdminMsg('msg-youtube', '✗ Gagal memperbarui YouTube BGM.', 'error'));
 }
 
 async function handleReset(): Promise<void> {

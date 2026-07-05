@@ -1,7 +1,8 @@
 import {
-  state, clicksRef, configRef, configThemeRef, configBgmRef, configVictoryBgmRef,
+  state, clicksRef, configRef, configThemeRef, configBgmRef, configVictoryBgmRef, configYoutubeIdRef,
   db, ref, onValue, runTransaction, tapDistributed,
 } from './firebase';
+import { initYouTube, destroyYouTube } from './youtube';
 import { playTapSound, playMilestoneSound, playSuccessSound, playPartyHorn, bgMusic, victoryMusic, playVictoryAnthem } from './audio';
 import {
   fireworksShow, triggerMilestoneConfetti, createTapEffect, createShockwave,
@@ -85,6 +86,15 @@ export function initUI(): void {
       if (isPlaying) {
         victoryMusic.play().catch((e: Error) => console.warn('Victory music play failed:', e));
       }
+    }
+  });
+
+  onValue(configYoutubeIdRef, (snap) => {
+    const videoId = snap.val();
+    if (videoId && typeof videoId === 'string' && videoId.length === 11) {
+      initYouTube(videoId);
+    } else if (!videoId) {
+      destroyYouTube();
     }
   });
 

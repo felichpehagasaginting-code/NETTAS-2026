@@ -104,9 +104,9 @@ export function spawnFloatingEmoji(): void {
 // ─── Fireworks (celebration) ──────────────────────────────────────────────────
 
 export function fireworksShow(): void {
-  const duration = 8 * 1000;
+  const duration = 10 * 1000;
   const animationEnd = Date.now() + duration;
-  const defaults = { startVelocity: 40, spread: 120, ticks: 40, zIndex: 21000 };
+  const defaults = { startVelocity: 45, spread: 140, ticks: 50, zIndex: 21000 };
 
   function randomInRange(min: number, max: number): number {
     return Math.random() * (max - min) + min;
@@ -115,8 +115,8 @@ export function fireworksShow(): void {
   for (let i = 0; i < 2; i++) {
     setTimeout(() => {
       confetti({
-        particleCount: 50,
-        spread: 120,
+        particleCount: 60,
+        spread: 140,
         origin: { y: 0.5 },
         colors: ['#FFD700', '#FF1493', '#00FFFF', '#FF4500', '#00FF00', '#9400D3'],
         zIndex: 21000,
@@ -128,7 +128,7 @@ export function fireworksShow(): void {
     const timeLeft = animationEnd - Date.now();
     if (timeLeft <= 0) return clearInterval(interval);
 
-    const particleCount = Math.floor(30 * (timeLeft / duration));
+    const particleCount = Math.floor(35 * (timeLeft / duration));
 
     confetti({
       ...defaults,
@@ -142,6 +142,8 @@ export function fireworksShow(): void {
       origin: { x: randomInRange(0.6, 0.9), y: Math.random() - 0.2 },
       colors: ['#0ff', '#f0f', '#fff', '#ffa500', '#ff1493'],
     });
+
+    spawnFloatingEmoji();
   }, 500);
 }
 

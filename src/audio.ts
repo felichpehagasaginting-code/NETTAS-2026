@@ -1,5 +1,6 @@
 import { state } from './firebase';
 import { DEFAULT_BGM_INSTRUMENTAL, DEFAULT_BGM_VICTORY } from './config';
+import { youTubeExists, isYouTubePlaying, playYouTube, pauseYouTube } from './youtube';
 
 export const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
 
@@ -161,6 +162,9 @@ export function playVictoryAnthem(): void {
   if (audioCtx.state === 'suspended') audioCtx.resume();
   if (!visualizerInited) initVisualizer();
 
+  // Pause YouTube player if active
+  if (youTubeExists()) pauseYouTube();
+
   // 1. Smoothly fade out BGM instrumental over 2 seconds
   fadeOut(bgMusic, 2000, () => {
     bgMusic.pause();
@@ -175,26 +179,52 @@ export function playVictoryAnthem(): void {
   }, 1000);
 }
 
+function updateMusicStatus(status: string): void {
+  const el = document.getElementById('admin-music-status') || document.getElementById('music-status');
+  if (el) el.innerText = status;
+}
+
 export function toggleMusic(): void {
   if (audioCtx.state === 'suspended') audioCtx.resume();
   if (!visualizerInited) initVisualizer();
 
   const isVictory = state.isFinished;
-  const activeMusic = isVictory ? victoryMusic : bgMusic;
-  const otherMusic = isVictory ? bgMusic : victoryMusic;
 
-  // Make sure the inactive track is paused
-  otherMusic.pause();
+  if (isVictory) {
+    const otherMusic = bgMusic;
+    otherMusic.pause();
+    if (victoryMusic.paused) {
+      victoryMusic.play().catch((e) => console.error('Victory audio play failed:', e));
+      updateMusicStatus('ON');
+      victoryMusic.volume = 0.5;
+    } else {
+      victoryMusic.pause();
+      updateMusicStatus('OFF');
+    }
+    return;
+  }
 
-  if (activeMusic.paused) {
-    activeMusic.play().catch((e) => console.error('Audio play failed:', e));
-    const statusEl = document.getElementById('admin-music-status') || document.getElementById('music-status');
-    if (statusEl) statusEl.innerText = 'ON';
-    activeMusic.volume = isVictory ? 0.5 : 0.4;
+  // Normal mode — check YouTube player first
+  if (youTubeExists()) {
+    bgMusic.pause();
+    if (isYouTubePlaying()) {
+      pauseYouTube();
+      updateMusicStatus('OFF');
+    } else {
+      playYouTube();
+      updateMusicStatus('ON');
+    }
+    return;
+  }
+
+  // Fallback to HTML Audio element
+  if (bgMusic.paused) {
+    bgMusic.play().catch((e) => console.error('Audio play failed:', e));
+    updateMusicStatus('ON');
+    bgMusic.volume = 0.4;
   } else {
-    activeMusic.pause();
-    const statusEl = document.getElementById('admin-music-status') || document.getElementById('music-status');
-    if (statusEl) statusEl.innerText = 'OFF';
+    bgMusic.pause();
+    updateMusicStatus('OFF');
   }
 }
 
