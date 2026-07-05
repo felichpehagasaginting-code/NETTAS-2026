@@ -1,7 +1,7 @@
 import { state, set, ref, db, get, clicksRef, configRef, configThemeRef, configBgmRef, configVictoryBgmRef, configYoutubeIdRef, waitForAuth, storage, storageRef, uploadBytes, getDownloadURL } from './firebase';
 import { ADMIN_HASH } from './config';
 import { customConfirm } from './modal';
-import { toggleMusic } from './audio';
+import { toggleMusic, resetAudioState } from './audio';
 
 let adminOverlay: HTMLElement;
 let adminPinOverlay: HTMLElement;
@@ -346,6 +346,7 @@ async function handleReset(): Promise<void> {
   document.getElementById('victory-modal')!.classList.remove('show');
   document.getElementById('strobe-layer')!.classList.remove('strobe-bg');
   document.body.classList.remove('bg-festive');
+  resetAudioState();
 
   set(clicksRef, 0)
     .then(() => showAdminMsg('msg-action', '✓ Progres berhasil direset ke 0.', 'success'))

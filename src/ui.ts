@@ -4,7 +4,7 @@ import {
 } from './firebase';
 import { initYouTube, destroyYouTube, playYouTube, setYouTubeVolume } from './youtube';
 import { initPresence, markTap, subscribePresenceCount, subscribeActiveCount } from './presence';
-import { isMusicEnabled, playTapSound, playMilestoneSound, playSuccessSound, playPartyHorn, bgMusic, victoryMusic, playVictoryAnthem } from './audio';
+import { isMusicEnabled, playTapSound, playMilestoneSound, playSuccessSound, playPartyHorn, bgMusic, victoryMusic, playVictoryAnthem, resetAudioState } from './audio';
 import {
   fireworksShow, triggerMilestoneConfetti, createTapEffect, createShockwave,
   triggerImpact, spawnFallingEmojiOnClick, updateCanvasColor,
@@ -287,5 +287,6 @@ export function resetSystem(): void {
     clearInterval(hypeIntervalId);
     hypeIntervalId = null;
   }
+  resetAudioState();
   document.getElementById('admin-pin-overlay')!.classList.add('show');
 }
