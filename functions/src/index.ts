@@ -6,18 +6,7 @@ const db = admin.database();
 
 const SHARD_COUNT = 10;
 
-export const tapDistributed = functions.https.onCall(async (data, context) => {
-  if (!context.auth) {
-    throw new functions.https.HttpsError('unauthenticated', 'Harus login.');
-  }
-
-  const nodeName: string = data?.nodeName || '';
-  const nodeId: string = data?.nodeId || context.auth.uid;
-
-  if (!nodeName) {
-    throw new functions.https.HttpsError('invalid-argument', 'nodeName wajib diisi.');
-  }
-
+export const tapDistributed = functions.https.onCall(async () => {
   const shardId = Math.floor(Math.random() * SHARD_COUNT);
   const shardRef = db.ref(`counter_shards/shard_${shardId}`);
 
@@ -26,19 +15,6 @@ export const tapDistributed = functions.https.onCall(async (data, context) => {
   } catch (err) {
     throw new functions.https.HttpsError('internal', 'Gagal update shard.');
   }
-
-  const userRef = db.ref(`users/${nodeId}`);
-  try {
-    await userRef.transaction((current) => {
-      if (!current) return { name: nodeName, clicks: 1 };
-      return { name: nodeName, clicks: (current.clicks || 0) + 1 };
-    });
-  } catch (err) {
-    console.warn('User counter update failed:', err);
-  }
-
-  const presenceRef = db.ref(`presence/${nodeId}`);
-  await presenceRef.set(nodeName);
 
   return { success: true };
 });

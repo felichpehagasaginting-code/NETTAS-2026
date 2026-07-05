@@ -19,24 +19,6 @@
       "bgm_url": {
         ".write": "auth != null && newData.isString()"
       }
-    },
-    "presence": {
-      ".read": "auth != null",
-      "$node_id": {
-        ".write": "auth != null && newData.isString()",
-        ".validate": "newData.isString()"
-      }
-    },
-    "users": {
-      ".indexOn": ["clicks"],
-      "$node_id": {
-        ".read": "auth != null",
-        ".write": "auth != null && newData.hasChildren(['name', 'clicks']) && newData.child('clicks').isNumber() && newData.child('name').isString()"
-      }
-    },
-    "admins": {
-      ".read": "auth != null",
-      ".write": "auth != null"
     }
   }
 }

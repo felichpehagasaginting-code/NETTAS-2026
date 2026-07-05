@@ -4,3 +4,4 @@ dist/
 *.local
 .env
 .env.local
+NETTAS-2026-main/ 
