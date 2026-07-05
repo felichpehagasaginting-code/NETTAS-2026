@@ -51,12 +51,20 @@ export class FirebaseState {
 
 export const state = new FirebaseState();
 
-// Anonymous auth initialization (for database security rules)
-const _authPromise = signInAnonymously(auth);
-_authPromise.catch((err) => {
-  console.error('Anonymous auth failed:', err);
-});
+// Anonymous auth initialization with auto-retry (for database security rules)
+let _authResolve!: () => void;
+const _authPromise = new Promise<void>((resolve) => { _authResolve = resolve; });
+
+function initAuth(): void {
+  signInAnonymously(auth)
+    .then(() => _authResolve())
+    .catch((err) => {
+      console.error('Anonymous auth failed, retrying in 3s:', err);
+      setTimeout(initAuth, 3000);
+    });
+}
+initAuth();
 
 export function waitForAuth(): Promise<void> {
-  return _authPromise.then(() => {});
+  return _authPromise;
 }

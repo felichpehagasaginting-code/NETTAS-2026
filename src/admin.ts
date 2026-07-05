@@ -42,6 +42,7 @@ export function initAdmin(): void {
   document.getElementById('btn-admin-set-bgm')!.addEventListener('click', handleSetBgm);
   document.getElementById('btn-admin-set-victory-bgm')!.addEventListener('click', handleSetVictoryBgm);
   document.getElementById('btn-admin-set-youtube')!.addEventListener('click', handleSetYoutube);
+  document.getElementById('btn-admin-remove-youtube')!.addEventListener('click', handleRemoveYoutube);
   document.getElementById('btn-admin-upload-bgm')!.addEventListener('click', handleUploadBgm);
   document.getElementById('btn-admin-reset')!.addEventListener('click', handleReset);
   document.getElementById('btn-admin-force-win')!.addEventListener('click', handleForceWin);
@@ -241,13 +242,33 @@ async function handleSetYoutube(): Promise<void> {
     showAdminMsg('msg-youtube', '⚠ URL YouTube tidak valid. Gunakan link youtube.com/watch?v=...', 'error');
     return;
   }
-  await waitForAuth();
-  await Promise.all([
-    set(configYoutubeIdRef, videoId),
-    set(configBgmRef, null),
-  ]);
-  showAdminMsg('msg-youtube', `✓ YouTube BGM diatur (video ID: ${videoId}).`, 'success');
-  updateBgmStatus();
+  try {
+    await waitForAuth();
+    await Promise.all([
+      set(configYoutubeIdRef, videoId),
+      set(configBgmRef, null),
+    ]);
+    showAdminMsg('msg-youtube', `✓ YouTube BGM diatur (video ID: ${videoId}).`, 'success');
+    updateBgmStatus();
+  } catch (err) {
+    showAdminMsg('msg-youtube', '✗ Gagal menyimpan. Cek koneksi.', 'error');
+  }
+}
+
+async function handleRemoveYoutube(): Promise<void> {
+  const ok = await customConfirm('⚠ Hapus pengaturan YouTube BGM?');
+  if (!ok) return;
+  try {
+    await waitForAuth();
+    await Promise.all([
+      set(configYoutubeIdRef, null),
+      set(configBgmRef, null),
+    ]);
+    showAdminMsg('msg-youtube', '✓ YouTube BGM dihapus.', 'success');
+    updateBgmStatus();
+  } catch (err) {
+    showAdminMsg('msg-youtube', '✗ Gagal menghapus.', 'error');
+  }
 }
 
 async function handleSetBgm(): Promise<void> {
@@ -286,9 +307,10 @@ async function handleUploadBgm(): Promise<void> {
     showAdminMsg('msg-upload', '⚠ File terlalu besar. Maksimal 10MB.', 'error');
     return;
   }
-  showAdminMsg('msg-upload', '⏳ Mengupload...', 'success');
-  await waitForAuth();
+  const msgEl = document.getElementById('msg-upload');
+  if (msgEl) { msgEl.textContent = '⏳ Mengupload...'; msgEl.className = 'admin-status-msg'; }
   try {
+    await waitForAuth();
     const fileRef = storageRef(storage, `bgm/${Date.now()}_${file.name}`);
     const snapshot = await uploadBytes(fileRef, file);
     const downloadUrl = await getDownloadURL(snapshot.ref);

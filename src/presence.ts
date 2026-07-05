@@ -22,9 +22,10 @@ export function initPresence(): void {
   const connectedRef = ref(db, '.info/connected');
   onValue(connectedRef, (snap) => {
     if (snap.val() === true) {
-      set(_presenceRef!, { online: true, connectedAt: Date.now() });
-      onDisconnect(_presenceRef!).remove();
-      onDisconnect(_activeRef!).remove();
+      set(_presenceRef!, { online: true, connectedAt: Date.now() }).then(() => {
+        onDisconnect(_presenceRef!).remove().catch(() => {});
+        onDisconnect(_activeRef!).remove().catch(() => {});
+      }).catch((e) => console.warn('Presence set failed:', e));
     }
   });
 }
