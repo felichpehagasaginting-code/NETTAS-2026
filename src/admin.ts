@@ -128,7 +128,7 @@ function openAdminPanel(): void {
   switchBgmMode();
   adminOverlay.classList.add('show');
   startAnalyticsUpdates();
-  updateBgmStatus();
+  updateBgmStatus().catch(() => {});
 }
 
 function startAnalyticsUpdates(): void {
