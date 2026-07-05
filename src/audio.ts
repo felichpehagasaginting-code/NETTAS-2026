@@ -1,6 +1,6 @@
 import { state } from './firebase';
 import { DEFAULT_BGM_INSTRUMENTAL, DEFAULT_BGM_VICTORY } from './config';
-import { youTubeExists, isYouTubePlaying, playYouTube, pauseYouTube } from './youtube';
+import { youTubeExists, isYouTubePlaying, playYouTube, pauseYouTube, setYouTubeVolume } from './youtube';
 
 export const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
 
@@ -211,6 +211,7 @@ export function toggleMusic(): void {
       pauseYouTube();
       updateMusicStatus('OFF');
     } else {
+      setYouTubeVolume(0.4);
       playYouTube();
       updateMusicStatus('ON');
     }
