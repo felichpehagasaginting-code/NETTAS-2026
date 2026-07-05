@@ -13,6 +13,7 @@ import {
   getAuth,
   signInAnonymously,
 } from 'firebase/auth';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { firebaseConfig } from './config';
 
@@ -20,6 +21,8 @@ const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 const auth = getAuth(app);
 const storage = getStorage(app);
+const functions = getFunctions(app, 'asia-southeast1');
+const tapDistributed = httpsCallable(functions, 'tapDistributed');
 
 export const clicksRef = ref(db, 'global_clicks');
 export const configRef = ref(db, 'config/target_clicks');
@@ -29,7 +32,7 @@ export const configVictoryBgmRef = ref(db, 'config/victory_bgm_url');
 export const configYoutubeIdRef = ref(db, 'config/youtube_video_id');
 export const configMusicRef = ref(db, 'config/music_enabled');
 
-export { ref, db, onValue, set, update, get, runTransaction, auth, onDisconnect };
+export { ref, db, onValue, set, update, get, runTransaction, auth, functions, tapDistributed, onDisconnect };
 export { storage, storageRef, uploadBytes, getDownloadURL };
 
 export class FirebaseState {
