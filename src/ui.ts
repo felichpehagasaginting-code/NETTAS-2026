@@ -2,9 +2,9 @@ import {
   state, clicksRef, configRef, configThemeRef, configBgmRef, configVictoryBgmRef, configYoutubeIdRef,
   db, ref, onValue, runTransaction, tapDistributed,
 } from './firebase';
-import { initYouTube, destroyYouTube } from './youtube';
+import { initYouTube, destroyYouTube, playYouTube, setYouTubeVolume } from './youtube';
 import { initPresence, markTap, subscribePresenceCount, subscribeActiveCount } from './presence';
-import { playTapSound, playMilestoneSound, playSuccessSound, playPartyHorn, bgMusic, victoryMusic, playVictoryAnthem } from './audio';
+import { isMusicEnabled, playTapSound, playMilestoneSound, playSuccessSound, playPartyHorn, bgMusic, victoryMusic, playVictoryAnthem } from './audio';
 import {
   fireworksShow, triggerMilestoneConfetti, createTapEffect, createShockwave,
   triggerImpact, spawnFallingEmojiOnClick, updateCanvasColor,
@@ -71,9 +71,8 @@ export function initUI(): void {
   onValue(configBgmRef, (snap) => {
     const newBgmUrl = snap.val();
     if (newBgmUrl && newBgmUrl !== bgMusic.src) {
-      const isPlaying = !bgMusic.paused;
       bgMusic.src = newBgmUrl;
-      if (isPlaying) {
+      if (isMusicEnabled()) {
         bgMusic.play().catch((e: Error) => console.warn('Music play failed:', e));
       }
     }
@@ -82,9 +81,8 @@ export function initUI(): void {
   onValue(configVictoryBgmRef, (snap) => {
     const newVictoryBgmUrl = snap.val();
     if (newVictoryBgmUrl && newVictoryBgmUrl !== victoryMusic.src) {
-      const isPlaying = !victoryMusic.paused;
       victoryMusic.src = newVictoryBgmUrl;
-      if (isPlaying) {
+      if (isMusicEnabled()) {
         victoryMusic.play().catch((e: Error) => console.warn('Victory music play failed:', e));
       }
     }
@@ -93,7 +91,13 @@ export function initUI(): void {
   onValue(configYoutubeIdRef, (snap) => {
     const videoId = snap.val();
     if (videoId && typeof videoId === 'string' && videoId.length === 11) {
-      initYouTube(videoId);
+      const wasPlaying = isMusicEnabled();
+      initYouTube(videoId).then(() => {
+        if (wasPlaying) {
+          setYouTubeVolume(0.4);
+          playYouTube();
+        }
+      });
     } else if (!videoId) {
       destroyYouTube();
     }

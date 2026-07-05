@@ -4,6 +4,9 @@ import { youTubeExists, isYouTubePlaying, playYouTube, pauseYouTube, setYouTubeV
 
 export const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
 
+let _musicEnabled = false;
+export function isMusicEnabled(): boolean { return _musicEnabled; }
+
 export const bgMusic = new Audio(DEFAULT_BGM_INSTRUMENTAL);
 bgMusic.loop = true;
 bgMusic.volume = 0.4;
@@ -197,8 +200,10 @@ export function toggleMusic(): void {
       victoryMusic.play().catch((e) => console.error('Victory audio play failed:', e));
       updateMusicStatus('ON');
       victoryMusic.volume = 0.5;
+      _musicEnabled = true;
     } else {
       victoryMusic.pause();
+      _musicEnabled = false;
       updateMusicStatus('OFF');
     }
     return;
@@ -209,10 +214,12 @@ export function toggleMusic(): void {
     bgMusic.pause();
     if (isYouTubePlaying()) {
       pauseYouTube();
+      _musicEnabled = false;
       updateMusicStatus('OFF');
     } else {
       setYouTubeVolume(0.4);
       playYouTube();
+      _musicEnabled = true;
       updateMusicStatus('ON');
     }
     return;
@@ -220,10 +227,12 @@ export function toggleMusic(): void {
 
   if (bgMusic.paused) {
     bgMusic.play().catch((e) => console.error('Audio play failed:', e));
+    _musicEnabled = true;
     updateMusicStatus('ON');
     bgMusic.volume = 0.4;
   } else {
     bgMusic.pause();
+    _musicEnabled = false;
     updateMusicStatus('OFF');
   }
 }
