@@ -82,12 +82,39 @@
             </div>
             <hr class="admin-divider">
             <div class="admin-section">
-                <p class="admin-section-label">🎵 Ubah URL Musik Latar (Semua User)</p>
-                <div style="display: flex; gap: 0.5rem;">
-                    <input type="text" id="admin-bgm-input" class="admin-input" placeholder="URL file MP3">
-                    <button class="admin-btn admin-btn-primary" id="btn-admin-set-bgm" style="width: auto; padding: 0.75rem 1.2rem; white-space: nowrap;">SET BGM</button>
+                <p class="admin-section-label">🎵 Sumber Musik Latar</p>
+                <div style="display:flex;gap:1rem;margin-bottom:0.7rem;">
+                    <label style="color:#fff;font-size:0.8rem;cursor:pointer;">
+                        <input type="radio" name="bgm-source" value="youtube" checked> YouTube
+                    </label>
+                    <label style="color:#fff;font-size:0.8rem;cursor:pointer;">
+                        <input type="radio" name="bgm-source" value="upload"> Upload File
+                    </label>
+                    <label style="color:#fff;font-size:0.8rem;cursor:pointer;">
+                        <input type="radio" name="bgm-source" value="url"> URL MP3
+                    </label>
                 </div>
-                <p class="admin-status-msg" id="msg-bgm"></p>
+                <div id="bgm-mode-youtube">
+                    <div style="display:flex;gap:0.5rem;">
+                        <input type="text" id="admin-youtube-input" class="admin-input" placeholder="https://youtube.com/watch?v=...">
+                        <button class="admin-btn admin-btn-primary" id="btn-admin-set-youtube" style="width:auto;padding:0.75rem 1.2rem;white-space:nowrap;">SET YT</button>
+                    </div>
+                    <p class="admin-status-msg" id="msg-youtube"></p>
+                </div>
+                <div id="bgm-mode-upload" style="display:none">
+                    <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+                        <input type="file" id="admin-bgm-file" accept="audio/*,.mp3,.wav,.ogg,.m4a" class="admin-input" style="flex:1;padding:0.4rem;min-width:120px;">
+                        <button class="admin-btn admin-btn-primary" id="btn-admin-upload-bgm" style="width:auto;padding:0.75rem 1.2rem;white-space:nowrap;">UPLOAD</button>
+                    </div>
+                    <p class="admin-status-msg" id="msg-upload"></p>
+                </div>
+                <div id="bgm-mode-url" style="display:none">
+                    <div style="display:flex;gap:0.5rem;">
+                        <input type="text" id="admin-bgm-input" class="admin-input" placeholder="URL file MP3">
+                        <button class="admin-btn admin-btn-primary" id="btn-admin-set-bgm" style="width:auto;padding:0.75rem 1.2rem;white-space:nowrap;">SET MP3</button>
+                    </div>
+                    <p class="admin-status-msg" id="msg-bgm"></p>
+                </div>
             </div>
             <hr class="admin-divider">
             <div class="admin-section">
@@ -99,14 +126,6 @@
                 <p class="admin-status-msg" id="msg-victory-bgm"></p>
             </div>
             <hr class="admin-divider">
-            <div class="admin-section">
-                <p class="admin-section-label">▶️ YouTube BGM (override MP3)</p>
-                <div style="display: flex; gap: 0.5rem;">
-                    <input type="text" id="admin-youtube-input" class="admin-input" placeholder="https://youtube.com/watch?v=...">
-                    <button class="admin-btn admin-btn-primary" id="btn-admin-set-youtube" style="width: auto; padding: 0.75rem 1.2rem; white-space: nowrap;">SET YT</button>
-                </div>
-                <p class="admin-status-msg" id="msg-youtube"></p>
-            </div>
             <hr class="admin-divider">
             <div class="admin-section">
                 <p class="admin-section-label">📊 ANALYTICS REAL-TIME</p>

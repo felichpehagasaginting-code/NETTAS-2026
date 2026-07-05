@@ -33,13 +33,13 @@
         ".write": "auth != null && newData.isString()"
       },
       "bgm_url": {
-        ".write": "auth != null && newData.isString()"
+        ".write": "auth != null && (newData.isString() || newData.val() === null)"
       },
       "victory_bgm_url": {
         ".write": "auth != null && newData.isString()"
       },
       "youtube_video_id": {
-        ".write": "auth != null && newData.isString()"
+        ".write": "auth != null && (newData.isString() || newData.val() === null)"
       }
     }
   }

@@ -14,11 +14,13 @@ import {
   signInAnonymously,
 } from 'firebase/auth';
 import { getFunctions, httpsCallable } from 'firebase/functions';
+import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { firebaseConfig } from './config';
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 const auth = getAuth(app);
+const storage = getStorage(app);
 const functions = getFunctions(app, 'asia-southeast1');
 const tapDistributed = httpsCallable(functions, 'tapDistributed');
 
@@ -30,6 +32,7 @@ export const configVictoryBgmRef = ref(db, 'config/victory_bgm_url');
 export const configYoutubeIdRef = ref(db, 'config/youtube_video_id');
 
 export { ref, db, onValue, set, update, get, runTransaction, auth, functions, tapDistributed, onDisconnect };
+export { storage, storageRef, uploadBytes, getDownloadURL };
 
 export class FirebaseState {
   target = 2026;

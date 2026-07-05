@@ -1,4 +1,4 @@
-import { state, set, ref, db, get, clicksRef, configRef, configThemeRef, configBgmRef, configVictoryBgmRef, configYoutubeIdRef, waitForAuth } from './firebase';
+import { state, set, ref, db, get, clicksRef, configRef, configThemeRef, configBgmRef, configVictoryBgmRef, configYoutubeIdRef, waitForAuth, storage, storageRef, uploadBytes, getDownloadURL } from './firebase';
 import { ADMIN_HASH } from './config';
 import { customConfirm } from './modal';
 import { toggleMusic } from './audio';
@@ -42,9 +42,14 @@ export function initAdmin(): void {
   document.getElementById('btn-admin-set-bgm')!.addEventListener('click', handleSetBgm);
   document.getElementById('btn-admin-set-victory-bgm')!.addEventListener('click', handleSetVictoryBgm);
   document.getElementById('btn-admin-set-youtube')!.addEventListener('click', handleSetYoutube);
+  document.getElementById('btn-admin-upload-bgm')!.addEventListener('click', handleUploadBgm);
   document.getElementById('btn-admin-reset')!.addEventListener('click', handleReset);
   document.getElementById('btn-admin-force-win')!.addEventListener('click', handleForceWin);
   document.getElementById('btn-admin-music-toggle')!.addEventListener('click', handleMusicToggle);
+
+  document.querySelectorAll('input[name="bgm-source"]').forEach((r) => {
+    r.addEventListener('change', () => switchBgmMode());
+  });
 
   adminOverlay.addEventListener('click', (e) => {
     if (e.target === adminOverlay) closeAdmin();
@@ -92,10 +97,18 @@ function handleAdminLogout(): void {
   closePinLogin();
 }
 
+function switchBgmMode(): void {
+  const mode = (document.querySelector('input[name="bgm-source"]:checked') as HTMLInputElement)?.value || 'youtube';
+  document.getElementById('bgm-mode-youtube')!.style.display = mode === 'youtube' ? '' : 'none';
+  document.getElementById('bgm-mode-upload')!.style.display = mode === 'upload' ? '' : 'none';
+  document.getElementById('bgm-mode-url')!.style.display = mode === 'url' ? '' : 'none';
+}
+
 function openAdminPanel(): void {
   (document.getElementById('admin-target-input') as HTMLInputElement).value = String(state.target);
   (document.getElementById('admin-clicks-input') as HTMLInputElement).value = String(state.currentCount);
   clearAdminMessages();
+  switchBgmMode();
   adminOverlay.classList.add('show');
   startAnalyticsUpdates();
 }
@@ -143,7 +156,7 @@ function showAdminMsg(elId: string, message: string, type: 'success' | 'error'):
 }
 
 function clearAdminMessages(): void {
-  ['msg-target', 'msg-clicks', 'msg-theme', 'msg-bgm', 'msg-victory-bgm', 'msg-youtube', 'msg-action'].forEach((id) => {
+  ['msg-target', 'msg-clicks', 'msg-theme', 'msg-bgm', 'msg-victory-bgm', 'msg-youtube', 'msg-upload', 'msg-action'].forEach((id) => {
     const el = document.getElementById(id);
     if (el) {
       el.className = 'admin-status-msg';
@@ -184,30 +197,6 @@ function handleSetTheme(): void {
     .catch(() => showAdminMsg('msg-theme', '✗ Gagal memperbarui tema global.', 'error'));
 }
 
-function handleSetBgm(): void {
-  const input = document.getElementById('admin-bgm-input') as HTMLInputElement;
-  const bgmUrl = input.value.trim();
-  if (!bgmUrl) {
-    showAdminMsg('msg-bgm', '⚠ URL musik tidak boleh kosong.', 'error');
-    return;
-  }
-  set(configBgmRef, bgmUrl)
-    .then(() => showAdminMsg('msg-bgm', '✓ URL BGM MP3 global diperbarui.', 'success'))
-    .catch(() => showAdminMsg('msg-bgm', '✗ Gagal memperbarui URL BGM MP3.', 'error'));
-}
-
-function handleSetVictoryBgm(): void {
-  const input = document.getElementById('admin-victory-bgm-input') as HTMLInputElement;
-  const url = input.value.trim();
-  if (!url) {
-    showAdminMsg('msg-victory-bgm', '⚠ URL musik kemenangan tidak boleh kosong.', 'error');
-    return;
-  }
-  set(configVictoryBgmRef, url)
-    .then(() => showAdminMsg('msg-victory-bgm', '✓ URL Victory BGM diperbarui.', 'success'))
-    .catch(() => showAdminMsg('msg-victory-bgm', '✗ Gagal memperbarui URL Victory BGM.', 'error'));
-}
-
 function extractYoutubeId(url: string): string | null {
   const patterns = [
     /(?:youtube\.com\/watch\?v=)([a-zA-Z0-9_-]{11})(?:[?#&/]|$)/,
@@ -223,7 +212,6 @@ function extractYoutubeId(url: string): string | null {
   return null;
 }
 
-
 async function handleSetYoutube(): Promise<void> {
   const input = document.getElementById('admin-youtube-input') as HTMLInputElement;
   const url = input.value.trim();
@@ -237,9 +225,70 @@ async function handleSetYoutube(): Promise<void> {
     return;
   }
   await waitForAuth();
-  set(configYoutubeIdRef, videoId)
-    .then(() => showAdminMsg('msg-youtube', `✓ YouTube BGM diatur (video ID: ${videoId}).`, 'success'))
-    .catch(() => showAdminMsg('msg-youtube', '✗ Gagal memperbarui YouTube BGM.', 'error'));
+  await Promise.all([
+    set(configYoutubeIdRef, videoId),
+    set(configBgmRef, null),
+  ]);
+  showAdminMsg('msg-youtube', `✓ YouTube BGM diatur (video ID: ${videoId}).`, 'success');
+}
+
+async function handleSetBgm(): Promise<void> {
+  const input = document.getElementById('admin-bgm-input') as HTMLInputElement;
+  const bgmUrl = input.value.trim();
+  if (!bgmUrl) {
+    showAdminMsg('msg-bgm', '⚠ URL musik tidak boleh kosong.', 'error');
+    return;
+  }
+  await waitForAuth();
+  await Promise.all([
+    set(configBgmRef, bgmUrl),
+    set(configYoutubeIdRef, null),
+  ]);
+  showAdminMsg('msg-bgm', '✓ URL BGM MP3 global diperbarui.', 'success');
+}
+
+async function handleUploadBgm(): Promise<void> {
+  const fileInput = document.getElementById('admin-bgm-file') as HTMLInputElement;
+  const file = fileInput.files?.[0];
+  if (!file) {
+    showAdminMsg('msg-upload', '⚠ Pilih file audio terlebih dahulu.', 'error');
+    return;
+  }
+  if (!file.type.startsWith('audio/')) {
+    showAdminMsg('msg-upload', '⚠ File harus berupa audio (MP3, WAV, OGG, dll).', 'error');
+    return;
+  }
+  if (file.size > 10 * 1024 * 1024) {
+    showAdminMsg('msg-upload', '⚠ File terlalu besar. Maksimal 10MB.', 'error');
+    return;
+  }
+  showAdminMsg('msg-upload', '⏳ Mengupload...', 'success');
+  await waitForAuth();
+  try {
+    const fileRef = storageRef(storage, `bgm/${Date.now()}_${file.name}`);
+    const snapshot = await uploadBytes(fileRef, file);
+    const downloadUrl = await getDownloadURL(snapshot.ref);
+    await Promise.all([
+      set(configBgmRef, downloadUrl),
+      set(configYoutubeIdRef, null),
+    ]);
+    showAdminMsg('msg-upload', `✓ File "${file.name}" berhasil diupload sebagai BGM.`, 'success');
+    fileInput.value = '';
+  } catch (err) {
+    showAdminMsg('msg-upload', '✗ Gagal upload file. Cek koneksi dan izin Storage.', 'error');
+  }
+}
+
+function handleSetVictoryBgm(): void {
+  const input = document.getElementById('admin-victory-bgm-input') as HTMLInputElement;
+  const url = input.value.trim();
+  if (!url) {
+    showAdminMsg('msg-victory-bgm', '⚠ URL musik kemenangan tidak boleh kosong.', 'error');
+    return;
+  }
+  set(configVictoryBgmRef, url)
+    .then(() => showAdminMsg('msg-victory-bgm', '✓ URL Victory BGM diperbarui.', 'success'))
+    .catch(() => showAdminMsg('msg-victory-bgm', '✗ Gagal memperbarui URL Victory BGM.', 'error'));
 }
 
 async function handleReset(): Promise<void> {
