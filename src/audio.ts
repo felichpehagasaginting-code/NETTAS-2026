@@ -9,7 +9,7 @@ export function isMusicEnabled(): boolean { return _musicEnabled; }
 
 export const bgMusic = new Audio(DEFAULT_BGM_INSTRUMENTAL);
 bgMusic.loop = true;
-bgMusic.volume = 0.4;
+bgMusic.volume = 0.75;
 bgMusic.crossOrigin = 'anonymous';
 
 export const victoryMusic = new Audio(DEFAULT_BGM_VICTORY);
@@ -179,7 +179,7 @@ export function playVictoryAnthem(): void {
     victoryMusic.volume = 0;
     victoryMusic.currentTime = 0;
     victoryMusic.play().catch((e) => console.warn('Victory music autoplay failed:', e));
-    fadeIn(victoryMusic, 1500, 0.5);
+    fadeIn(victoryMusic, 1500, 0.85);
     
     // Start triggering synthesized firework sounds!
     startVictoryFireworksSFX();
@@ -203,7 +203,7 @@ export function toggleMusic(): void {
     if (victoryMusic.paused) {
       victoryMusic.play().catch((e) => console.error('Victory audio play failed:', e));
       updateMusicStatus('ON');
-      victoryMusic.volume = 0.5;
+      victoryMusic.volume = 0.85;
       _musicEnabled = true;
     } else {
       victoryMusic.pause();
@@ -233,7 +233,7 @@ export function toggleMusic(): void {
     bgMusic.play().catch((e) => console.error('Audio play failed:', e));
     _musicEnabled = true;
     updateMusicStatus('ON');
-    bgMusic.volume = 0.4;
+    bgMusic.volume = 0.75;
   } else {
     bgMusic.pause();
     _musicEnabled = false;
@@ -259,7 +259,7 @@ export function playTapSound(clientX?: number, _clientY?: number): void {
   const now = audioCtx.currentTime;
 
   const masterGain = audioCtx.createGain();
-  masterGain.gain.setValueAtTime(0.7, now);
+  masterGain.gain.setValueAtTime(0.95, now);
 
   const panner = audioCtx.createStereoPanner();
   panner.pan.setValueAtTime(panValue, now);
@@ -432,7 +432,7 @@ export function playSynthesizedFirework(panValue: number = 0): void {
   const now = audioCtx.currentTime;
 
   const masterGain = audioCtx.createGain();
-  masterGain.gain.setValueAtTime(0.4 + Math.random() * 0.3, now); // Randomize volume slightly
+  masterGain.gain.setValueAtTime(0.85 + Math.random() * 0.15, now); // Randomize volume slightly
   
   const panner = audioCtx.createStereoPanner();
   panner.pan.setValueAtTime(panValue, now);
@@ -507,7 +507,7 @@ export function resetAudioState(): void {
   victoryMusic.currentTime = 0;
   
   if (_musicEnabled) {
-    bgMusic.volume = 0.4;
+    bgMusic.volume = 0.75;
     bgMusic.currentTime = 0;
     bgMusic.play().catch((e) => console.warn('BGM resume failed:', e));
     updateMusicStatus('ON');
