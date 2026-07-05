@@ -926,7 +926,8 @@ h1 {
   pointer-events: none;
 }
 
-.tap-btn:active {
+.tap-btn:active,
+.tap-btn.keyboard-active {
   transform: rotateX(5deg) translateY(10px);
   box-shadow: 0 2px 0 var(--glass-border), 0 5px 15px rgba(0, 0, 0, 0.2);
 }
@@ -1369,24 +1370,7 @@ h1 {
   border-top: none;
 }
 
-.hype-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  margin-top: 0.5rem;
-  font-family: 'Space Grotesk', sans-serif;
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.1rem;
-  color: rgba(255, 255, 255, 0.4);
-  transition: all 0.3s;
-}
 
-.hype-value {
-  color: var(--accent-neon);
-  text-shadow: 0 0 10px var(--accent-neon);
-}
 
 .hype-active #logo-container {
   animation: logo-shake-glow 0.5s infinite alternate;

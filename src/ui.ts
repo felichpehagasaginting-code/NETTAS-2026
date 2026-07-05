@@ -123,12 +123,49 @@ export function initUI(): void {
 
   document.getElementById('tap-action')!.addEventListener('pointerdown', handleTap, { passive: true });
 
+  // Spacebar support for triggering tap
+  document.addEventListener('keydown', (e: KeyboardEvent) => {
+    if (e.code === 'Space') {
+      const target = e.target as HTMLElement;
+      if (
+        target &&
+        (target.tagName === 'INPUT' ||
+          target.tagName === 'SELECT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.isContentEditable)
+      ) {
+        return;
+      }
+      e.preventDefault();
+
+      const btn = document.getElementById('tap-action');
+      if (btn && !btn.classList.contains('keyboard-active')) {
+        btn.classList.add('keyboard-active');
+
+        const rect = btn.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+
+        triggerTap(centerX, centerY);
+      }
+    }
+  });
+
+  document.addEventListener('keyup', (e: KeyboardEvent) => {
+    if (e.code === 'Space') {
+      const btn = document.getElementById('tap-action');
+      if (btn) {
+        btn.classList.remove('keyboard-active');
+      }
+    }
+  });
+
   startHypeMeter();
 }
 
-function handleTap(e: PointerEvent): void {
+function triggerTap(x: number, y: number): void {
   if (state.isFinished) return;
-  playTapSound(e.clientX, e.clientY);
+  playTapSound(x, y);
   if (navigator.vibrate) navigator.vibrate(50);
 
   runTransaction(clicksRef, (curr: number) => (curr || 0) + 1).catch((err) => {
@@ -136,10 +173,14 @@ function handleTap(e: PointerEvent): void {
   });
 
   markTap();
-  createTapEffect(e.clientX, e.clientY, '');
-  createShockwave(e.clientX, e.clientY);
+  createTapEffect(x, y, '');
+  createShockwave(x, y);
   triggerImpact();
   spawnFallingEmojiOnClick();
+}
+
+function handleTap(e: PointerEvent): void {
+  triggerTap(e.clientX, e.clientY);
 }
 
 function updateUI(count: number): void {

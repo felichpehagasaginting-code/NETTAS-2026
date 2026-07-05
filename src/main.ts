@@ -9,6 +9,17 @@ import { toggleMusic } from './audio';
 
 function registerSW(): void {
   if ('serviceWorker' in navigator) {
+    if (import.meta.env.DEV) {
+      navigator.serviceWorker.getRegistrations().then((registrations) => {
+        for (const registration of registrations) {
+          registration.unregister().then((success) => {
+            if (success) console.log('Successfully unregistered service worker for development.');
+          });
+        }
+      });
+      return;
+    }
+
     navigator.serviceWorker.register('/sw.js').catch((e) => {
       console.warn('SW registration failed:', e);
     });
