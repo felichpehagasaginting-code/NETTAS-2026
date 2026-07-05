@@ -1,6 +1,6 @@
 import {
   state, clicksRef, configRef, configThemeRef, configBgmRef, configVictoryBgmRef, configYoutubeIdRef, configMusicRef,
-  db, ref, onValue, runTransaction, tapDistributed,
+  db, ref, onValue, runTransaction,
 } from './firebase';
 import { initYouTube, destroyYouTube, playYouTube, pauseYouTube, setYouTubeVolume, youTubeExists, isYouTubePlaying } from './youtube';
 import { initPresence, markTap, subscribePresenceCount, subscribeActiveCount } from './presence';
@@ -105,20 +105,24 @@ export function initUI(): void {
   });
 
   onValue(configMusicRef, (snap) => {
-    const enabled = snap.val();
-    _remoteMusicOn = enabled === true;
-    if (_remoteMusicOn) {
-      if (youTubeExists()) {
-        if (!isYouTubePlaying()) {
-          setYouTubeVolume(0.4);
-          playYouTube();
+    try {
+      const enabled = snap.val();
+      _remoteMusicOn = enabled === true;
+      if (_remoteMusicOn) {
+        if (youTubeExists()) {
+          if (!isYouTubePlaying()) {
+            setYouTubeVolume(0.4);
+            playYouTube();
+          }
+        } else if (bgMusic.paused) {
+          bgMusic.play().catch(() => {});
         }
-      } else if (bgMusic.paused) {
-        bgMusic.play().catch(() => {});
+      } else if (enabled === false) {
+        if (youTubeExists()) pauseYouTube();
+        bgMusic.pause();
       }
-    } else if (enabled === false) {
-      if (youTubeExists()) pauseYouTube();
-      bgMusic.pause();
+    } catch (e) {
+      console.warn('Music sync error:', e);
     }
   });
 
@@ -148,10 +152,7 @@ function handleTap(e: PointerEvent): void {
   playTapSound(e.clientX, e.clientY);
   if (navigator.vibrate) navigator.vibrate(50);
 
-  tapDistributed({})
-    .catch(() => {
-      runTransaction(clicksRef, (curr: number) => (curr || 0) + 1);
-    });
+  runTransaction(clicksRef, (curr: number) => (curr || 0) + 1);
 
   markTap();
   createTapEffect(e.clientX, e.clientY, '');
@@ -161,11 +162,13 @@ function handleTap(e: PointerEvent): void {
 
   // Retry music play on user gesture (bypasses autoplay policy)
   if (_remoteMusicOn) {
-    if (youTubeExists() && !isYouTubePlaying()) {
-      playYouTube();
-    } else if (bgMusic.paused) {
-      bgMusic.play().catch(() => {});
-    }
+    try {
+      if (youTubeExists() && !isYouTubePlaying()) {
+        playYouTube();
+      } else if (bgMusic.paused) {
+        bgMusic.play().catch(() => {});
+      }
+    } catch (_e) { /* ignore */ }
   }
 }
 
