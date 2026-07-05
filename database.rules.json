@@ -8,6 +8,22 @@
       ".read": "auth != null",
       ".write": "auth != null"
     },
+    "presence": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      "$uid": {
+        ".write": "auth != null",
+        ".validate": "newData.hasChildren(['online', 'connectedAt'])"
+      }
+    },
+    "active_clicks": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      "$uid": {
+        ".write": "auth != null",
+        ".validate": "newData.hasChildren(['lastTap'])"
+      }
+    },
     "config": {
       ".read": "auth != null",
       "target_clicks": {

@@ -3,6 +3,8 @@ let apiLoaded = false;
 let _ready = false;
 let _playing = false;
 let _volume = 40;
+let _pendingPlay = false;
+let _currentVideoId: string | null = null;
 
 function loadAPI(): Promise<void> {
   if (apiLoaded) return Promise.resolve();
@@ -23,19 +25,21 @@ function loadAPI(): Promise<void> {
 }
 
 export async function initYouTube(videoId: string): Promise<void> {
+  if (_currentVideoId === videoId && _ready) return;
   destroyYouTube();
+  _currentVideoId = videoId;
   await loadAPI();
 
   const container = document.createElement('div');
   container.id = 'youtube-player';
-  container.style.cssText = 'visibility:hidden;position:absolute;width:0;height:0';
+  container.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;opacity:0.01;pointer-events:none;overflow:hidden';
   document.body.appendChild(container);
 
   return new Promise((resolve) => {
     player = new YT.Player('youtube-player', {
       videoId,
-      height: '1',
-      width: '1',
+      height: '100%',
+      width: '100%',
       playerVars: {
         autoplay: 0,
         controls: 0,
@@ -45,11 +49,17 @@ export async function initYouTube(videoId: string): Promise<void> {
         rel: 0,
         showinfo: 0,
         iv_load_policy: 3,
+        playsinline: 1,
       },
       events: {
         onReady: () => {
           _ready = true;
           player!.setVolume(_volume);
+          player!.unMute();
+          if (_pendingPlay) {
+            player!.playVideo();
+            _pendingPlay = false;
+          }
           resolve();
         },
         onStateChange: (e) => {
@@ -65,11 +75,17 @@ export async function initYouTube(videoId: string): Promise<void> {
 }
 
 export function playYouTube(): void {
-  if (!player || !_ready) return;
+  if (!player) return;
+  if (!_ready) {
+    _pendingPlay = true;
+    return;
+  }
+  player.unMute();
   player.playVideo();
 }
 
 export function pauseYouTube(): void {
+  _pendingPlay = false;
   if (!player || !_ready) return;
   player.pauseVideo();
 }
@@ -80,6 +96,8 @@ export function setYouTubeVolume(v: number): void {
 }
 
 export function destroyYouTube(): void {
+  _pendingPlay = false;
+  _currentVideoId = null;
   if (player) {
     player.destroy();
     player = null;

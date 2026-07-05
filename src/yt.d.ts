@@ -5,6 +5,9 @@ declare namespace YT {
     pauseVideo(): void;
     destroy(): void;
     setVolume(volume: number): void;
+    unMute(): void;
+    mute(): void;
+    isMuted(): boolean;
     getCurrentTime(): number;
   }
   interface PlayerOptions {
@@ -23,6 +26,7 @@ declare namespace YT {
     rel?: number;
     showinfo?: number;
     iv_load_policy?: number;
+    playsinline?: number;
   }
   interface Events {
     onReady?: (event: { target: Player }) => void;

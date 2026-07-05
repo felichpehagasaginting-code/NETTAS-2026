@@ -3,6 +3,7 @@ import {
   db, ref, onValue, runTransaction, tapDistributed,
 } from './firebase';
 import { initYouTube, destroyYouTube } from './youtube';
+import { initPresence, markTap, subscribePresenceCount, subscribeActiveCount } from './presence';
 import { playTapSound, playMilestoneSound, playSuccessSound, playPartyHorn, bgMusic, victoryMusic, playVictoryAnthem } from './audio';
 import {
   fireworksShow, triggerMilestoneConfetti, createTapEffect, createShockwave,
@@ -98,6 +99,22 @@ export function initUI(): void {
     }
   });
 
+  initPresence();
+
+  subscribePresenceCount((n) => {
+    const header = document.getElementById('presence-count');
+    if (header) header.textContent = String(n);
+    const adminNodes = document.getElementById('analytics-nodes');
+    if (adminNodes) adminNodes.textContent = String(n);
+    const adminAvg = document.getElementById('analytics-avg');
+    if (adminAvg) adminAvg.textContent = n > 0 ? Math.round(state.currentCount / n).toLocaleString() : '0';
+  });
+
+  subscribeActiveCount((n) => {
+    const el = document.getElementById('active-clickers');
+    if (el) el.textContent = String(n);
+  });
+
   document.getElementById('tap-action')!.addEventListener('pointerdown', handleTap, { passive: true });
 
   startHypeMeter();
@@ -113,6 +130,7 @@ function handleTap(e: PointerEvent): void {
       runTransaction(clicksRef, (curr: number) => (curr || 0) + 1);
     });
 
+  markTap();
   createTapEffect(e.clientX, e.clientY, '');
   createShockwave(e.clientX, e.clientY);
   triggerImpact();

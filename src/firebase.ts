@@ -7,6 +7,7 @@ import {
   update,
   get,
   runTransaction,
+  onDisconnect,
 } from 'firebase/database';
 import {
   getAuth,
@@ -28,7 +29,7 @@ export const configBgmRef = ref(db, 'config/bgm_url');
 export const configVictoryBgmRef = ref(db, 'config/victory_bgm_url');
 export const configYoutubeIdRef = ref(db, 'config/youtube_video_id');
 
-export { ref, db, onValue, set, update, get, runTransaction, auth, functions, tapDistributed };
+export { ref, db, onValue, set, update, get, runTransaction, auth, functions, tapDistributed, onDisconnect };
 
 export class FirebaseState {
   target = 2026;
