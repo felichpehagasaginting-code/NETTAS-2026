@@ -538,21 +538,8 @@
 }
 
 .bg-festive {
-  background: linear-gradient(-45deg, #ff007f, #7928ca, #00e5ff, #bf00ff) !important;
-  background-size: 400% 400% !important;
-  animation: gradientBG 8s ease infinite !important;
-}
-
-@keyframes gradientBG {
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
+  background: linear-gradient(135deg, #7928ca, #ff007f, #bf00ff) !important;
+  transition: background 0.5s ease;
 }
 
 body {
@@ -732,25 +719,6 @@ body {
     max-width: fit-content;
     order: 1;
   }
-}
-
-@keyframes shake {
-  0%,
-  100% {
-    transform: translateX(0);
-  }
-  20%,
-  60% {
-    transform: translateX(-6px);
-  }
-  40%,
-  80% {
-    transform: translateX(6px);
-  }
-}
-
-.shake {
-  animation: shake 0.3s ease-in-out;
 }
 
 header {
@@ -957,15 +925,13 @@ h1 {
 .victory-modal {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.85);
+  background: rgba(0, 0, 0, 0.92);
   z-index: 20000;
   display: none;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   text-align: center;
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
 }
 
 .victory-modal.show {
@@ -1133,32 +1099,30 @@ h1 {
   inset: 0;
   z-index: 9999;
   pointer-events: none;
-  animation: strobeEffect 0.15s infinite;
+  animation: strobeEffect 1.2s 3;
 }
 
 @keyframes strobeEffect {
   0%,
-  49% {
-    background-color: rgba(255, 255, 255, 0.15);
+  9% {
+    background-color: rgba(255, 255, 255, 0.12);
   }
-  50%,
+  10%,
   100% {
     background-color: transparent;
   }
 }
 
 .pulse-text {
-  animation: pulseContinuous 0.5s infinite alternate !important;
+  animation: pulseContinuous 1s infinite alternate !important;
 }
 
 @keyframes pulseContinuous {
   from {
     transform: scale(1);
-    text-shadow: 0 0 20px var(--primary-neon);
   }
   to {
-    transform: scale(1.1);
-    text-shadow: 0 0 50px var(--primary-neon), 0 0 80px #fff;
+    transform: scale(1.05);
   }
 }
 

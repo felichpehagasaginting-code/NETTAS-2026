@@ -104,31 +104,31 @@ export function spawnFloatingEmoji(): void {
 // ─── Fireworks (celebration) ──────────────────────────────────────────────────
 
 export function fireworksShow(): void {
-  const duration = 15 * 1000;
+  const duration = 8 * 1000;
   const animationEnd = Date.now() + duration;
-  const defaults = { startVelocity: 55, spread: 360, ticks: 120, zIndex: 21000 };
+  const defaults = { startVelocity: 40, spread: 120, ticks: 40, zIndex: 21000 };
 
   function randomInRange(min: number, max: number): number {
     return Math.random() * (max - min) + min;
   }
 
-  for (let i = 0; i < 3; i++) {
+  for (let i = 0; i < 2; i++) {
     setTimeout(() => {
       confetti({
-        particleCount: 250,
-        spread: 200,
+        particleCount: 50,
+        spread: 120,
         origin: { y: 0.5 },
         colors: ['#FFD700', '#FF1493', '#00FFFF', '#FF4500', '#00FF00', '#9400D3'],
         zIndex: 21000,
       });
-    }, i * 300);
+    }, i * 400);
   }
 
   const interval = setInterval(() => {
     const timeLeft = animationEnd - Date.now();
     if (timeLeft <= 0) return clearInterval(interval);
 
-    const particleCount = 80 * (timeLeft / duration);
+    const particleCount = Math.floor(30 * (timeLeft / duration));
 
     confetti({
       ...defaults,
@@ -142,28 +142,7 @@ export function fireworksShow(): void {
       origin: { x: randomInRange(0.6, 0.9), y: Math.random() - 0.2 },
       colors: ['#0ff', '#f0f', '#fff', '#ffa500', '#ff1493'],
     });
-
-    for (let i = 0; i < 3; i++) spawnFloatingEmoji();
-
-    if (Math.random() > 0.5) {
-      confetti({
-        particleCount: 80,
-        angle: 60,
-        spread: 80,
-        origin: { x: 0, y: 0.8 },
-        zIndex: 21000,
-        colors: ['#FFD700', '#FF1493'],
-      });
-      confetti({
-        particleCount: 80,
-        angle: 120,
-        spread: 80,
-        origin: { x: 1, y: 0.8 },
-        zIndex: 21000,
-        colors: ['#00FFFF', '#00FF00'],
-      });
-    }
-  }, 150);
+  }, 500);
 }
 
 // ─── Background canvas particles ─────────────────────────────────────────────
@@ -205,8 +184,8 @@ export function updateCanvasColor(): void {
 }
 
 export function drawParticles(): void {
-  // Pause rendering when tab is hidden — saves CPU/battery on background tabs.
-  if (document.hidden) {
+  // Pause when tab hidden or victory screen shown
+  if (document.hidden || (window as any).__victoryActive) {
     animFrameId = requestAnimationFrame(drawParticles);
     return;
   }

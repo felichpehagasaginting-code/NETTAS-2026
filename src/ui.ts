@@ -167,6 +167,7 @@ function showMilestone(_percentage: number, title: string, icon: string): void {
 function win(): void {
   if (state.isFinished) return;
   state.isFinished = true;
+  (window as any).__victoryActive = true;
 
   if (hypeIntervalId) {
     clearInterval(hypeIntervalId);
@@ -217,6 +218,7 @@ function startHypeMeter(): void {
 }
 
 export function resetSystem(): void {
+  (window as any).__victoryActive = false;
   if (hypeIntervalId) {
     clearInterval(hypeIntervalId);
     hypeIntervalId = null;
