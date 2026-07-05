@@ -1,7 +1,7 @@
-import { state, set, ref, db, get, clicksRef, configRef, configThemeRef, configBgmRef, configVictoryBgmRef, configYoutubeIdRef, waitForAuth, storage, storageRef, uploadBytes, getDownloadURL } from './firebase';
+import { state, set, ref, db, get, clicksRef, configRef, configThemeRef, configBgmRef, configVictoryBgmRef, configYoutubeIdRef, configMusicRef, waitForAuth, storage, storageRef, uploadBytes, getDownloadURL } from './firebase';
 import { ADMIN_HASH } from './config';
 import { customConfirm } from './modal';
-import { toggleMusic } from './audio';
+import { toggleMusic, isMusicEnabled } from './audio';
 
 let adminOverlay: HTMLElement;
 let adminPinOverlay: HTMLElement;
@@ -354,6 +354,7 @@ async function handleReset(): Promise<void> {
 
 function handleMusicToggle(): void {
   toggleMusic();
+  set(configMusicRef, isMusicEnabled());
 }
 
 async function handleForceWin(): Promise<void> {
