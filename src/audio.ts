@@ -54,8 +54,8 @@ function getReverbBuffer(): AudioBuffer {
 let analyser: AnalyserNode | null = null;
 let sourceBg: MediaElementAudioSourceNode | null = null;
 let sourceVictory: MediaElementAudioSourceNode | null = null;
+let victoryGainNode: GainNode | null = null;
 let visualizerInited = false;
-let victoryFireworksIntervalId: ReturnType<typeof setInterval> | null = null;
 
 const vCanvas = document.getElementById('visualizer') as HTMLCanvasElement;
 const vCtx = vCanvas?.getContext('2d');
@@ -72,8 +72,12 @@ export function initVisualizer(): void {
   sourceVictory = audioCtx.createMediaElementSource(victoryMusic);
   
   analyser = audioCtx.createAnalyser();
+  victoryGainNode = audioCtx.createGain();
+  victoryGainNode.gain.setValueAtTime(1.35, audioCtx.currentTime); // Boost victory BGM by 1.35x
+  
   sourceBg.connect(analyser);
-  sourceVictory.connect(analyser);
+  sourceVictory.connect(victoryGainNode);
+  victoryGainNode.connect(analyser);
   
   analyser.connect(audioCtx.destination);
   analyser.fftSize = 256;
@@ -174,15 +178,12 @@ export function playVictoryAnthem(): void {
     bgMusic.pause();
   });
 
-  // 2. Start victory anthem after 1 second, fading in over 1.5 seconds
+  // 2. Play fireworks sound effect after 1 second, fading in over 1.5 seconds
   setTimeout(() => {
     victoryMusic.volume = 0;
     victoryMusic.currentTime = 0;
     victoryMusic.play().catch((e) => console.warn('Victory music autoplay failed:', e));
-    fadeIn(victoryMusic, 1500, 0.85);
-    
-    // Start triggering synthesized firework sounds!
-    startVictoryFireworksSFX();
+    fadeIn(victoryMusic, 1500, 1.0);
   }, 1000);
 }
 
@@ -196,14 +197,13 @@ export function toggleMusic(): void {
   if (!visualizerInited) initVisualizer();
 
   const isVictory = state.isFinished;
-
   if (isVictory) {
     const otherMusic = bgMusic;
     otherMusic.pause();
     if (victoryMusic.paused) {
       victoryMusic.play().catch((e) => console.error('Victory audio play failed:', e));
       updateMusicStatus('ON');
-      victoryMusic.volume = 0.85;
+      victoryMusic.volume = 1.0;
       _musicEnabled = true;
     } else {
       victoryMusic.pause();
@@ -426,83 +426,7 @@ export function playPartyHorn(): void {
   osc.stop(now + 0.8);
 }
 
-// ─── Synthesized Firework Sound Effect (Offline, Low-latency, Dynamic) ────────
-export function playSynthesizedFirework(panValue: number = 0): void {
-  if (audioCtx.state === 'suspended') audioCtx.resume();
-  const now = audioCtx.currentTime;
-
-  const masterGain = audioCtx.createGain();
-  masterGain.gain.setValueAtTime(0.85 + Math.random() * 0.15, now); // Randomize volume slightly
-  
-  const panner = audioCtx.createStereoPanner();
-  panner.pan.setValueAtTime(panValue, now);
-  masterGain.connect(panner);
-  panner.connect(audioCtx.destination);
-
-  // 1. The Boom (Deep low-frequency explosion thump)
-  const oscBoom = audioCtx.createOscillator();
-  const boomGain = audioCtx.createGain();
-  
-  oscBoom.type = 'triangle';
-  oscBoom.frequency.setValueAtTime(100 + Math.random() * 50, now); // Pitch variation
-  oscBoom.frequency.exponentialRampToValueAtTime(10, now + 0.25);
-  
-  boomGain.gain.setValueAtTime(0.9, now);
-  boomGain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
-  
-  oscBoom.connect(boomGain);
-  boomGain.connect(masterGain);
-  oscBoom.start(now);
-  oscBoom.stop(now + 0.35);
-
-  // 2. The Crackle / Sparkles (Filter-swept white noise)
-  const noise = audioCtx.createBufferSource();
-  const noiseGain = audioCtx.createGain();
-  const noiseFilter = audioCtx.createBiquadFilter();
-  
-  noise.buffer = getNoiseBuffer();
-  noise.loop = true;
-  
-  noiseFilter.type = 'bandpass';
-  noiseFilter.frequency.setValueAtTime(1200 + Math.random() * 600, now);
-  noiseFilter.Q.setValueAtTime(5, now);
-  
-  noiseGain.gain.setValueAtTime(0.3, now);
-  noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.7 + Math.random() * 0.4);
-  
-  noise.connect(noiseFilter);
-  noiseFilter.connect(noiseGain);
-  noiseGain.connect(masterGain);
-  noise.start(now);
-  noise.stop(now + 1.2);
-}
-
-function startVictoryFireworksSFX(): void {
-  if (victoryFireworksIntervalId) clearInterval(victoryFireworksIntervalId);
-  
-  // Play initial explosion
-  playSynthesizedFirework(0);
-  
-  // Continuous randomized fireworks show!
-  victoryFireworksIntervalId = setInterval(() => {
-    if (!state.isFinished) {
-      stopVictoryFireworksSFX();
-      return;
-    }
-    const pan = Math.random() * 1.6 - 0.8;
-    playSynthesizedFirework(pan);
-  }, 400 + Math.random() * 400); // Trigger every 400ms - 800ms
-}
-
-export function stopVictoryFireworksSFX(): void {
-  if (victoryFireworksIntervalId) {
-    clearInterval(victoryFireworksIntervalId);
-    victoryFireworksIntervalId = null;
-  }
-}
-
 export function resetAudioState(): void {
-  stopVictoryFireworksSFX();
   victoryMusic.pause();
   victoryMusic.currentTime = 0;
   

@@ -4,7 +4,7 @@ import {
 } from './firebase';
 import { initYouTube, destroyYouTube, playYouTube, setYouTubeVolume } from './youtube';
 import { initPresence, markTap, subscribePresenceCount, subscribeActiveCount } from './presence';
-import { isMusicEnabled, playTapSound, playMilestoneSound, playSuccessSound, playPartyHorn, bgMusic, victoryMusic, playVictoryAnthem, resetAudioState } from './audio';
+import { isMusicEnabled, playTapSound, playMilestoneSound, bgMusic, victoryMusic, playVictoryAnthem, resetAudioState } from './audio';
 import {
   fireworksShow, triggerMilestoneConfetti, createTapEffect, createShockwave,
   triggerImpact, spawnFallingEmojiOnClick, updateCanvasColor,
@@ -246,10 +246,6 @@ function win(): void {
     if (els?.megaTitle) els.megaTitle.classList.add('pulse-text');
   }, 1000);
 
-  playPartyHorn();
-  setTimeout(playPartyHorn, 300);
-  setTimeout(playPartyHorn, 600);
-  playSuccessSound();
   fireworksShow();
   playVictoryAnthem();
 }
