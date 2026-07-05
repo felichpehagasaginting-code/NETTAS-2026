@@ -1,6 +1,6 @@
 import {
   state, clicksRef, configRef, configThemeRef, configBgmRef, configVictoryBgmRef, configYoutubeIdRef,
-  db, ref, onValue, runTransaction,
+  db, ref, onValue, runTransaction, waitForAuth,
 } from './firebase';
 import { initYouTube, destroyYouTube, playYouTube, setYouTubeVolume } from './youtube';
 import { initPresence, markTap, subscribePresenceCount, subscribeActiveCount } from './presence';
@@ -43,80 +43,82 @@ function cacheElements(): void {
 export function initUI(): void {
   cacheElements();
 
-  onValue(clicksRef, (snap) => {
-    state.currentCount = snap.val() || 0;
-    updateUI(state.currentCount);
-  });
-
-  onValue(configRef, (snap) => {
-    const newTarget = snap.val();
-    if (newTarget && typeof newTarget === 'number' && newTarget > 0) {
-      targetCount = newTarget;
-      state.target = newTarget;
-      if (els?.adminTargetInput && !els.adminTargetInput.value) {
-        els.adminTargetInput.placeholder = `Saat ini: ${newTarget}`;
-      }
+  waitForAuth().then(() => {
+    onValue(clicksRef, (snap) => {
+      state.currentCount = snap.val() || 0;
       updateUI(state.currentCount);
-    }
-  });
+    });
 
-  onValue(configThemeRef, (snap) => {
-    const globalTheme = snap.val();
-    if (globalTheme) {
-      document.documentElement.setAttribute('data-theme', globalTheme);
-      updateCanvasColor();
-    }
-  });
-
-  onValue(configBgmRef, (snap) => {
-    const newBgmUrl = snap.val();
-    if (newBgmUrl && newBgmUrl !== bgMusic.src) {
-      bgMusic.src = newBgmUrl;
-      if (isMusicEnabled()) {
-        bgMusic.play().catch((e: Error) => console.warn('Music play failed:', e));
-      }
-    }
-  });
-
-  onValue(configVictoryBgmRef, (snap) => {
-    const newVictoryBgmUrl = snap.val();
-    if (newVictoryBgmUrl && newVictoryBgmUrl !== victoryMusic.src) {
-      victoryMusic.src = newVictoryBgmUrl;
-      if (isMusicEnabled()) {
-        victoryMusic.play().catch((e: Error) => console.warn('Victory music play failed:', e));
-      }
-    }
-  });
-
-  onValue(configYoutubeIdRef, (snap) => {
-    const videoId = snap.val();
-    if (videoId && typeof videoId === 'string' && videoId.length === 11) {
-      const wasPlaying = isMusicEnabled();
-      initYouTube(videoId).then(() => {
-        if (wasPlaying) {
-          setYouTubeVolume(0.4);
-          playYouTube();
+    onValue(configRef, (snap) => {
+      const newTarget = snap.val();
+      if (newTarget && typeof newTarget === 'number' && newTarget > 0) {
+        targetCount = newTarget;
+        state.target = newTarget;
+        if (els?.adminTargetInput && !els.adminTargetInput.value) {
+          els.adminTargetInput.placeholder = `Saat ini: ${newTarget}`;
         }
-      });
-    } else if (!videoId) {
-      destroyYouTube();
-    }
-  });
+        updateUI(state.currentCount);
+      }
+    });
 
-  initPresence();
+    onValue(configThemeRef, (snap) => {
+      const globalTheme = snap.val();
+      if (globalTheme) {
+        document.documentElement.setAttribute('data-theme', globalTheme);
+        updateCanvasColor();
+      }
+    });
 
-  subscribePresenceCount((n) => {
-    const header = document.getElementById('presence-count');
-    if (header) header.textContent = String(n);
-    const adminNodes = document.getElementById('analytics-nodes');
-    if (adminNodes) adminNodes.textContent = String(n);
-    const adminAvg = document.getElementById('analytics-avg');
-    if (adminAvg) adminAvg.textContent = n > 0 ? Math.round(state.currentCount / n).toLocaleString() : '0';
-  });
+    onValue(configBgmRef, (snap) => {
+      const newBgmUrl = snap.val();
+      if (newBgmUrl && newBgmUrl !== bgMusic.src) {
+        bgMusic.src = newBgmUrl;
+        if (isMusicEnabled()) {
+          bgMusic.play().catch((e: Error) => console.warn('Music play failed:', e));
+        }
+      }
+    });
 
-  subscribeActiveCount((n) => {
-    const el = document.getElementById('active-clickers');
-    if (el) el.textContent = String(n);
+    onValue(configVictoryBgmRef, (snap) => {
+      const newVictoryBgmUrl = snap.val();
+      if (newVictoryBgmUrl && newVictoryBgmUrl !== victoryMusic.src) {
+        victoryMusic.src = newVictoryBgmUrl;
+        if (isMusicEnabled()) {
+          victoryMusic.play().catch((e: Error) => console.warn('Victory music play failed:', e));
+        }
+      }
+    });
+
+    onValue(configYoutubeIdRef, (snap) => {
+      const videoId = snap.val();
+      if (videoId && typeof videoId === 'string' && videoId.length === 11) {
+        const wasPlaying = isMusicEnabled();
+        initYouTube(videoId).then(() => {
+          if (wasPlaying) {
+            setYouTubeVolume(0.4);
+            playYouTube();
+          }
+        });
+      } else if (!videoId) {
+        destroyYouTube();
+      }
+    });
+
+    initPresence();
+
+    subscribePresenceCount((n) => {
+      const header = document.getElementById('presence-count');
+      if (header) header.textContent = String(n);
+      const adminNodes = document.getElementById('analytics-nodes');
+      if (adminNodes) adminNodes.textContent = String(n);
+      const adminAvg = document.getElementById('analytics-avg');
+      if (adminAvg) adminAvg.textContent = n > 0 ? Math.round(state.currentCount / n).toLocaleString() : '0';
+    });
+
+    subscribeActiveCount((n) => {
+      const el = document.getElementById('active-clickers');
+      if (el) el.textContent = String(n);
+    });
   });
 
   document.getElementById('tap-action')!.addEventListener('pointerdown', handleTap, { passive: true });
