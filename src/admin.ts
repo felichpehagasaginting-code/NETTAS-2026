@@ -1,15 +1,11 @@
-import { state, onValue, set, ref, db, get, clicksRef, configRef, configThemeRef, configBgmRef } from './firebase';
+import { state, set, ref, db, get, clicksRef, configRef, configThemeRef, configBgmRef } from './firebase';
 import { ADMIN_HASH } from './config';
 import { customConfirm } from './modal';
-import { bgMusic, victoryMusic } from './audio';
+import { toggleMusic } from './audio';
 
 let adminOverlay: HTMLElement;
 let adminPinOverlay: HTMLElement;
 let analyticsInterval: ReturnType<typeof setInterval> | null = null;
-
-function escapeHTML(str: string): string {
-  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-}
 
 export function initAdmin(): void {
   adminOverlay = document.getElementById('admin-overlay')!;
@@ -45,17 +41,11 @@ export function initAdmin(): void {
   document.getElementById('btn-admin-set-theme')!.addEventListener('click', handleSetTheme);
   document.getElementById('btn-admin-set-bgm')!.addEventListener('click', handleSetBgm);
   document.getElementById('btn-admin-reset')!.addEventListener('click', handleReset);
-  document.getElementById('btn-admin-reset-users')!.addEventListener('click', handleResetUsers);
   document.getElementById('btn-admin-force-win')!.addEventListener('click', handleForceWin);
+  document.getElementById('btn-admin-music-toggle')!.addEventListener('click', handleMusicToggle);
 
   adminOverlay.addEventListener('click', (e) => {
     if (e.target === adminOverlay) closeAdmin();
-  });
-
-  document.getElementById('btn-admin-export-csv')!.addEventListener('click', handleExportCsv);
-
-  onValue(ref(db, 'users'), (snap) => {
-    renderUsersList(snap);
   });
 }
 
@@ -103,12 +93,6 @@ function handleAdminLogout(): void {
 function openAdminPanel(): void {
   (document.getElementById('admin-target-input') as HTMLInputElement).value = String(state.target);
   (document.getElementById('admin-clicks-input') as HTMLInputElement).value = String(state.currentCount);
-  (document.getElementById('admin-bgm-input') as HTMLInputElement).value =
-    (document.getElementById('music-status')?.innerText === 'MUSIC: ON'
-      ? 'https://cdn.pixabay.com/audio/2022/03/24/audio_7306283b27.mp3'
-      : '');
-  const currentTheme = document.documentElement.getAttribute('data-theme') || 'nettas';
-  (document.getElementById('admin-theme-select') as HTMLSelectElement).value = currentTheme;
   clearAdminMessages();
   adminOverlay.classList.add('show');
   startAnalyticsUpdates();
@@ -124,14 +108,6 @@ function updateAnalytics(): void {
   const tpm = state.lastClicksCount > 0 ? state.hypeSpeed : 0;
   const tpmEl = document.getElementById('analytics-tpm');
   if (tpmEl) tpmEl.textContent = String(tpm * 60);
-
-  const nodesEl = document.getElementById('analytics-nodes');
-  const presenceCount = document.getElementById('presence-count')?.textContent || '0';
-  if (nodesEl) nodesEl.textContent = presenceCount;
-
-  const avgEl = document.getElementById('analytics-avg');
-  const nodeCount = parseInt(presenceCount) || 1;
-  if (avgEl) avgEl.textContent = Math.round(state.currentCount / nodeCount).toLocaleString();
 
   const ttgEl = document.getElementById('analytics-ttg');
   if (ttgEl && tpm > 0) {
@@ -227,29 +203,13 @@ async function handleReset(): Promise<void> {
   document.getElementById('strobe-layer')!.classList.remove('strobe-bg');
   document.body.classList.remove('bg-festive');
 
-  // Stop victory anthem and restore instrumental BGM state
-  victoryMusic.pause();
-  victoryMusic.currentTime = 0;
-  victoryMusic.volume = 0;
-  bgMusic.currentTime = 0;
-  bgMusic.volume = 0.4;
-  
-  const musicStatus = document.getElementById('music-status')?.innerText || '';
-  if (musicStatus.includes('ON')) {
-    bgMusic.play().catch((e) => console.warn('BGM autoplay on reset failed:', e));
-  }
-
   set(clicksRef, 0)
     .then(() => showAdminMsg('msg-action', '✓ Progres berhasil direset ke 0.', 'success'))
     .catch(() => showAdminMsg('msg-action', '✗ Gagal melakukan reset progres. Cek koneksi.', 'error'));
 }
 
-async function handleResetUsers(): Promise<void> {
-  const ok = await customConfirm('⚠ Anda yakin ingin menghapus SEMUA user node terdaftar?');
-  if (!ok) return;
-  set(ref(db, 'users'), null)
-    .then(() => showAdminMsg('msg-action', '✓ Semua user node berhasil dihapus.', 'success'))
-    .catch(() => showAdminMsg('msg-action', '✗ Gagal menghapus user node. Cek koneksi.', 'error'));
+function handleMusicToggle(): void {
+  toggleMusic();
 }
 
 async function handleForceWin(): Promise<void> {
@@ -261,87 +221,4 @@ async function handleForceWin(): Promise<void> {
       adminOverlay.classList.remove('show');
     })
     .catch(() => showAdminMsg('msg-action', '✗ Gagal. Cek koneksi.', 'error'));
-}
-
-function handleExportCsv(): void {
-  get(ref(db, 'users')).then((snap) => {
-    const rows: string[] = ['id,name,clicks'];
-    snap.forEach((child: any) => {
-      const u = child.val();
-      rows.push(`${child.key},${u.name || 'ANON'},${u.clicks || 0}`);
-    });
-    const blob = new Blob([rows.join('\n')], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `nettas-export-${Date.now()}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-    showAdminMsg('msg-action', '✓ CSV berhasil diexport.', 'success');
-  }).catch(() => showAdminMsg('msg-action', '✗ Gagal export CSV.', 'error'));
-}
-
-function renderUsersList(snap: any): void {
-  const usersContainer = document.getElementById('admin-users-list-container');
-  if (!usersContainer) return;
-  usersContainer.innerHTML = '';
-
-  const usersData: { id: string; name: string; clicks: number }[] = [];
-  snap.forEach((child: any) => {
-    usersData.push({ id: child.key, ...child.val() });
-  });
-
-  if (usersData.length === 0) {
-    usersContainer.innerHTML =
-      '<p style="text-align: center; color: rgba(255,255,255,0.4); font-size: 0.8rem; padding: 0.5rem;">Tidak ada node terdaftar.</p>';
-    return;
-  }
-
-  usersData.sort((a, b) => b.clicks - a.clicks);
-
-  usersData.forEach((user) => {
-    const item = document.createElement('div');
-    item.style.display = 'flex';
-    item.style.justifyContent = 'space-between';
-    item.style.alignItems = 'center';
-    item.style.padding = '0.4rem 0';
-    item.style.borderBottom = '1px solid rgba(255,255,255,0.05)';
-
-    item.innerHTML = `
-      <div style="display:flex; flex-direction:column;">
-        <span style="font-weight:bold; font-size:0.85rem; color:#fff;">${escapeHTML(user.name)}</span>
-        <span style="font-size:0.7rem; color:rgba(255,255,255,0.5);">${user.clicks || 0} clicks</span>
-      </div>
-      <div style="display:flex; gap:0.3rem;">
-        <button class="admin-btn-action-reset" data-id="${escapeHTML(user.id)}" style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); color:#fff; border-radius:4px; font-size:0.65rem; padding:0.2rem 0.5rem; cursor:pointer;">RESET</button>
-        <button class="admin-btn-action-delete" data-id="${escapeHTML(user.id)}" style="background:rgba(255,51,102,0.2); border:1px solid rgba(255,51,102,0.4); color:#ff3366; border-radius:4px; font-size:0.65rem; padding:0.2rem 0.5rem; cursor:pointer;">HAPUS</button>
-      </div>
-    `;
-    usersContainer.appendChild(item);
-  });
-
-  usersContainer.querySelectorAll('.admin-btn-action-reset').forEach((btn) => {
-    btn.addEventListener('click', async () => {
-      const id = (btn as HTMLElement).getAttribute('data-id');
-      if (id) {
-        const name = (btn as HTMLElement).closest('div')?.parentElement?.querySelector('span')?.textContent || 'node';
-        const ok = await customConfirm(`Reset klik untuk node <strong>${name}</strong>?`);
-        if (ok) {
-          set(ref(db, `users/${id}/clicks`), 0);
-        }
-      }
-    });
-  });
-  usersContainer.querySelectorAll('.admin-btn-action-delete').forEach((btn) => {
-    btn.addEventListener('click', async () => {
-      const id = (btn as HTMLElement).getAttribute('data-id');
-      if (id) {
-        const name = (btn as HTMLElement).closest('div')?.parentElement?.querySelector('span')?.textContent || 'node';
-        const ok = await customConfirm(`Hapus node <strong>${name}</strong> secara permanen?`);
-        if (ok) {
-          set(ref(db, `users/${id}`), null);
-        }
-      }
-    });
-  });
 }

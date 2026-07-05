@@ -188,12 +188,13 @@ export function toggleMusic(): void {
 
   if (activeMusic.paused) {
     activeMusic.play().catch((e) => console.error('Audio play failed:', e));
-    document.getElementById('music-status')!.innerText = 'MUSIC: ON';
-    // Restore solid default volumes
+    const statusEl = document.getElementById('admin-music-status') || document.getElementById('music-status');
+    if (statusEl) statusEl.innerText = 'ON';
     activeMusic.volume = isVictory ? 0.5 : 0.4;
   } else {
     activeMusic.pause();
-    document.getElementById('music-status')!.innerText = 'MUSIC: OFF';
+    const statusEl = document.getElementById('admin-music-status') || document.getElementById('music-status');
+    if (statusEl) statusEl.innerText = 'OFF';
   }
 }
 

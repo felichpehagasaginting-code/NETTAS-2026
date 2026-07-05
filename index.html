@@ -26,33 +26,7 @@
          so particle animations never trigger global layout recalculations. -->
     <div id="effects-overlay-container"></div>
 
-    <div id="intro-overlay" class="intro-overlay">
-        <div class="intro-scan-line"></div>
-        <div class="intro-content">
-            <div class="intro-logo-glow">
-                <img src="./nettas_logo_new.png" alt="NETTAS Logo" class="intro-logo-img">
-            </div>
-            <h2 class="intro-title">NETTAS 2026</h2>
-            <p class="intro-subtitle">Digital Awakening</p>
-            <p class="intro-desc" id="intro-desc-text">Sistem Sinkronisasi Kolaboratif Node Festival<br>Semua energi terhubung. Semua peserta menyatu.</p>
-            <div id="intro-step-1" style="display: flex; flex-direction: column; align-items: center; width: 100%;">
-                <div id="welcome-back-container" style="display: none; margin-bottom: 0.5rem; text-align: center;">
-                    <p style="color: var(--primary-neon); font-family: 'Space Grotesk', sans-serif; font-weight: 700; letter-spacing: 0.1rem; font-size: 0.8rem;">WELCOME BACK</p>
-                    <h3 id="welcome-back-name" style="color: #fff; font-family: 'Space Grotesk', sans-serif; font-size: 1.5rem; letter-spacing: 0.15rem; margin-top: 0.2rem;">-</h3>
-                </div>
-                <input type="text" id="node-name-input" class="admin-input" placeholder="MASUKKAN NAMA NODE ANDA" maxlength="12" style="margin-top: 1rem; text-align: center; max-width: 260px; letter-spacing: 0.15rem; font-weight: 700; text-transform: uppercase;">
-                <button class="init-system-btn" id="btn-enter-system" style="margin-top: 1.5rem;">⚡ INITIALIZE CONNECTION</button>
-                <button id="btn-intro-logout" class="switch-node-btn" style="display: none; margin-top: 1.2rem; background: rgba(255,51,102,0.15); border-color: rgba(255,51,102,0.4); color: #ff3366;">LOGOUT / SWITCH NODE</button>
-            </div>
-            <div id="intro-step-2" style="display: none; flex-direction: column; align-items: center; width: 100%;">
-                <p id="pin-prompt-text" style="color: #fff; font-family: 'Outfit', sans-serif; font-size: 0.85rem; letter-spacing: 0.05rem; text-align: center; margin-bottom: 1rem; line-height: 1.5;"></p>
-                <input type="password" id="node-pin-input" class="admin-input" placeholder="••••••" maxlength="6" pattern="[0-9]*" inputmode="numeric" style="text-align: center; max-width: 260px; letter-spacing: 0.5rem; font-weight: 700; font-size: 1.5rem;">
-                <p id="pin-error-text" style="color: #ff3366; font-family: 'Outfit', sans-serif; font-size: 0.75rem; margin-top: 0.5rem; display: none; font-weight: 700;"></p>
-                <button class="init-system-btn" id="btn-confirm-pin" style="margin-top: 1.5rem;">⚡ VERIFY & CONNECT</button>
-                <button id="btn-pin-back" style="background: none; border: none; color: rgba(255,255,255,0.4); font-family: 'Space Grotesk', sans-serif; font-size: 0.75rem; cursor: pointer; margin-top: 1.2rem; text-decoration: underline; letter-spacing: 0.1rem; text-transform: uppercase;">KEMBALI</button>
-            </div>
-        </div>
-    </div>
+
 
     <div id="admin-pin-overlay" class="admin-pin-overlay">
         <div class="admin-pin-box">
@@ -136,20 +110,12 @@
                         <p id="analytics-ttg" style="font-size: 1.2rem; font-weight: 800; color: var(--primary-neon);">--:--</p>
                     </div>
                 </div>
-                <button class="admin-btn admin-btn-primary" id="btn-admin-export-csv" style="font-size: 0.6rem; padding: 0.4rem;">EXPORT CSV</button>
-            </div>
-            <hr class="admin-divider">
-            <div class="admin-section">
-                <p class="admin-section-label">👥 Daftar Node & Reset Individu</p>
-                <div id="admin-users-list-container" style="max-height: 180px; overflow-y: auto; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; padding: 0.5rem; display: flex; flex-direction: column; gap: 0.25rem;">
-                    <p style="text-align: center; color: rgba(255,255,255,0.4); font-size: 0.8rem; padding: 0.5rem;">Loading nodes...</p>
-                </div>
+                <button class="admin-btn admin-btn-primary" id="btn-admin-music-toggle" style="font-size: 0.6rem; padding: 0.4rem;">🎵 MUSIC: <span id="admin-music-status">OFF</span></button>
             </div>
             <hr class="admin-divider">
             <div class="admin-section">
                 <p class="admin-section-label">⚠ Tindakan Berbahaya</p>
                 <button class="admin-btn admin-btn-danger" id="btn-admin-reset" style="margin-bottom: 0.7rem;">🔄 RESET TOTAL PROGRESS → 0</button>
-                <button class="admin-btn admin-btn-danger" id="btn-admin-reset-users" style="margin-bottom: 0.7rem; background: rgba(255,153,0,0.15); border-color: rgba(255,153,0,0.4); color: #ff9900;">👥 HAPUS SEMUA USER NODE</button>
                 <button class="admin-btn admin-btn-success" id="btn-admin-force-win">🏆 FORCE VICTORY (100%)</button>
                 <p class="admin-status-msg" id="msg-action"></p>
             </div>
@@ -165,17 +131,7 @@
     <div class="hud-corner bottom-left"></div>
     <div class="hud-corner bottom-right"></div>
     <div id="flash-overlay" class="screen-flash"></div>
-    <div class="control-group">
-        <select id="theme-dropdown" class="theme-select">
-            <option value="nettas">Theme: NETTAS</option>
-            <option value="dark">Theme: Dark</option>
-            <option value="light">Theme: Light</option>
-            <option value="rgb">Theme: RGB</option>
-        </select>
-        <button class="control-btn audio-toggle" id="btn-toggle-music">
-            <span id="music-status">MUSIC: OFF</span>
-        </button>
-    </div>
+
     <div class="meteors">
         <div class="meteor"></div>
         <div class="meteor"></div>
@@ -186,24 +142,12 @@
     <canvas id="canvas-bg"></canvas>
     <canvas id="visualizer"></canvas>
 
-    <div class="leaderboard-panel" id="leaderboard-panel">
-        <div class="leaderboard-header">🏆 TOP ACTIVE NODES</div>
-        <ul class="leaderboard-list" id="leaderboard-list">
-            <li class="leaderboard-item"><span class="leaderboard-name">Connecting...</span></li>
-        </ul>
-    </div>
-
-    <div class="node-info-badge" id="node-info-badge" style="display: none;">
-        <span>NODE: <span id="current-node-name" class="node-info-name">-</span></span>
-        <button class="switch-node-btn" id="btn-switch-node-ui">🔄 SWITCH</button>
-    </div>
-
     <header>
         <div class="data-stream" style="left: 10px; animation-duration: 15s;">SYSTEM_ONLINE_NODE_ACTIVE_SYNCING_DATA_STREAM</div>
         <div class="data-stream" style="right: 10px; animation-duration: 25s;">NETTAS_2026_PROTOCOL_X7_INITIALIZING_RESOURCES</div>
         <div class="online-status" id="admin-trigger">
             <div class="status-dot"></div>
-            <span id="presence-count">1</span> NODE CONNECTED
+            SYSTEM ONLINE
         </div>
         <h1>NETTAS 2026</h1>
     </header>

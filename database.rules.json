@@ -18,6 +18,9 @@
       },
       "bgm_url": {
         ".write": "auth != null && newData.isString()"
+      },
+      "victory_bgm_url": {
+        ".write": "auth != null && newData.isString()"
       }
     }
   }

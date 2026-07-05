@@ -21,11 +21,5 @@ export const TAP_EMOJIS = ['🤩', '😂', '🔥', '🎉', '🚀', '💖', '😎
 
 export const FLOATING_EMOJIS = ['🎉', '🚀', '✨', '🎊', '🔥', '💎', '🥳'];
 
-export const AUTH_CONFIG = {
-  adminEmails: ['admin@nettas2026.id'], // Add admin emails here
-  enableAnonymousAuth: true,
-};
-
 export const DEFAULT_BGM_INSTRUMENTAL = 'https://cdn.pixabay.com/audio/2022/03/24/audio_7306283b27.mp3';
 export const DEFAULT_BGM_VICTORY = 'https://assets.mixkit.co/music/preview/mixkit-stadium-rock-trailer-2875.mp3';
-
