@@ -40,9 +40,6 @@
       },
       "youtube_video_id": {
         ".write": "auth != null && (newData.isString() || newData.val() === null)"
-      },
-      "music_enabled": {
-        ".write": "auth != null && newData.isBoolean()"
       }
     }
   }

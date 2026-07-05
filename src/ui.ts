@@ -1,8 +1,8 @@
 import {
-  state, clicksRef, configRef, configThemeRef, configBgmRef, configVictoryBgmRef, configYoutubeIdRef, configMusicRef,
+  state, clicksRef, configRef, configThemeRef, configBgmRef, configVictoryBgmRef, configYoutubeIdRef,
   db, ref, onValue, runTransaction, tapDistributed,
 } from './firebase';
-import { initYouTube, destroyYouTube, playYouTube, pauseYouTube, setYouTubeVolume, youTubeExists, isYouTubePlaying } from './youtube';
+import { initYouTube, destroyYouTube, playYouTube, setYouTubeVolume } from './youtube';
 import { initPresence, markTap, subscribePresenceCount, subscribeActiveCount } from './presence';
 import { isMusicEnabled, playTapSound, playMilestoneSound, playSuccessSound, playPartyHorn, bgMusic, victoryMusic, playVictoryAnthem } from './audio';
 import {
@@ -25,7 +25,6 @@ let els: {
 } | null = null;
 
 let hypeIntervalId: ReturnType<typeof setInterval> | null = null;
-let _remoteMusicOn = false;
 
 function cacheElements(): void {
   els = {
@@ -92,7 +91,7 @@ export function initUI(): void {
   onValue(configYoutubeIdRef, (snap) => {
     const videoId = snap.val();
     if (videoId && typeof videoId === 'string' && videoId.length === 11) {
-      const wasPlaying = isMusicEnabled() || _remoteMusicOn;
+      const wasPlaying = isMusicEnabled();
       initYouTube(videoId).then(() => {
         if (wasPlaying) {
           setYouTubeVolume(0.4);
@@ -101,24 +100,6 @@ export function initUI(): void {
       });
     } else if (!videoId) {
       destroyYouTube();
-    }
-  });
-
-  onValue(configMusicRef, (snap) => {
-    const enabled = snap.val();
-    _remoteMusicOn = enabled === true;
-    if (_remoteMusicOn) {
-      if (youTubeExists()) {
-        if (!isYouTubePlaying()) {
-          setYouTubeVolume(0.4);
-          playYouTube();
-        }
-      } else if (bgMusic.paused) {
-        bgMusic.play().catch(() => {});
-      }
-    } else if (enabled === false) {
-      if (youTubeExists()) pauseYouTube();
-      bgMusic.pause();
     }
   });
 
@@ -158,15 +139,6 @@ function handleTap(e: PointerEvent): void {
   createShockwave(e.clientX, e.clientY);
   triggerImpact();
   spawnFallingEmojiOnClick();
-
-  // Retry music play on user gesture (bypasses autoplay policy)
-  if (_remoteMusicOn) {
-    if (youTubeExists() && !isYouTubePlaying()) {
-      playYouTube();
-    } else if (bgMusic.paused) {
-      bgMusic.play().catch(() => {});
-    }
-  }
 }
 
 function updateUI(count: number): void {
