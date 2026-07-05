@@ -31,7 +31,7 @@ export const configBgmRef = ref(db, 'config/bgm_url');
 export const configVictoryBgmRef = ref(db, 'config/victory_bgm_url');
 export const configYoutubeIdRef = ref(db, 'config/youtube_video_id');
 
-export { ref, db, onValue, set, update, get, runTransaction, auth, functions, tapDistributed, onDisconnect };
+export { ref, db, onValue, set, update, get, runTransaction, auth, functions, tapDistributed, onDisconnect, httpsCallable };
 export { storage, storageRef, uploadBytes, getDownloadURL };
 
 export class FirebaseState {

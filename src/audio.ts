@@ -1,6 +1,5 @@
 import { state } from './firebase';
 import { DEFAULT_BGM_INSTRUMENTAL, DEFAULT_BGM_VICTORY } from './config';
-import { youTubeExists, isYouTubePlaying, playYouTube, pauseYouTube, setYouTubeVolume } from './youtube';
 
 export const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
 
@@ -162,9 +161,6 @@ export function playVictoryAnthem(): void {
   if (audioCtx.state === 'suspended') audioCtx.resume();
   if (!visualizerInited) initVisualizer();
 
-  // Pause YouTube player if active
-  if (youTubeExists()) pauseYouTube();
-
   // 1. Smoothly fade out BGM instrumental over 2 seconds
   fadeOut(bgMusic, 2000, () => {
     bgMusic.pause();
@@ -204,21 +200,6 @@ export function toggleMusic(): void {
     return;
   }
 
-  // Normal mode — check YouTube player first
-  if (youTubeExists()) {
-    bgMusic.pause();
-    if (isYouTubePlaying()) {
-      pauseYouTube();
-      updateMusicStatus('OFF');
-    } else {
-      setYouTubeVolume(0.4);
-      playYouTube();
-      updateMusicStatus('ON');
-    }
-    return;
-  }
-
-  // Fallback to HTML Audio element
   if (bgMusic.paused) {
     bgMusic.play().catch((e) => console.error('Audio play failed:', e));
     updateMusicStatus('ON');

@@ -1,4 +1,4 @@
-import { state, set, ref, db, get, clicksRef, configRef, configThemeRef, configBgmRef, configVictoryBgmRef, configYoutubeIdRef, waitForAuth, storage, storageRef, uploadBytes, getDownloadURL } from './firebase';
+import { state, set, ref, db, get, clicksRef, configRef, configThemeRef, configBgmRef, configVictoryBgmRef, configYoutubeIdRef, waitForAuth, storage, storageRef, uploadBytes, getDownloadURL, functions, httpsCallable } from './firebase';
 import { ADMIN_HASH } from './config';
 import { customConfirm } from './modal';
 import { toggleMusic } from './audio';
@@ -6,6 +6,7 @@ import { toggleMusic } from './audio';
 let adminOverlay: HTMLElement;
 let adminPinOverlay: HTMLElement;
 let analyticsInterval: ReturnType<typeof setInterval> | null = null;
+const extractYoutubeAudio = httpsCallable(functions, 'extractYoutubeAudio');
 
 export function initAdmin(): void {
   adminOverlay = document.getElementById('admin-overlay')!;
@@ -221,15 +222,18 @@ async function handleSetYoutube(): Promise<void> {
   }
   const videoId = extractYoutubeId(url);
   if (!videoId) {
-    showAdminMsg('msg-youtube', '⚠ URL YouTube tidak valid. Gunakan link youtube.com/watch?v=...', 'error');
+    showAdminMsg('msg-youtube', '⚠ URL YouTube tidak valid.', 'error');
     return;
   }
-  await waitForAuth();
-  await Promise.all([
-    set(configYoutubeIdRef, videoId),
-    set(configBgmRef, null),
-  ]);
-  showAdminMsg('msg-youtube', `✓ YouTube BGM diatur (video ID: ${videoId}).`, 'success');
+  showAdminMsg('msg-youtube', '⏳ Mengekstrak audio...', 'success');
+  try {
+    await waitForAuth();
+    await extractYoutubeAudio({ videoId });
+    showAdminMsg('msg-youtube', '✓ Audio YouTube berhasil diekstrak sebagai BGM.', 'success');
+  } catch (err) {
+    console.error('YouTube extraction failed:', err);
+    showAdminMsg('msg-youtube', '✗ Gagal mengekstrak audio. Coba link lain atau mode Upload.', 'error');
+  }
 }
 
 async function handleSetBgm(): Promise<void> {
