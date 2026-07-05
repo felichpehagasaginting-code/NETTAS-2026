@@ -48,6 +48,11 @@ export class FirebaseState {
 export const state = new FirebaseState();
 
 // Anonymous auth initialization (for database security rules)
-signInAnonymously(auth).catch((err) => {
+const _authPromise = signInAnonymously(auth);
+_authPromise.catch((err) => {
   console.error('Anonymous auth failed:', err);
 });
+
+export function waitForAuth(): Promise<void> {
+  return _authPromise.then(() => {});
+}

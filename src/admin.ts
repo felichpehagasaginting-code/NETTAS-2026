@@ -1,4 +1,4 @@
-import { state, set, ref, db, get, clicksRef, configRef, configThemeRef, configBgmRef, configVictoryBgmRef, configYoutubeIdRef } from './firebase';
+import { state, set, ref, db, get, clicksRef, configRef, configThemeRef, configBgmRef, configVictoryBgmRef, configYoutubeIdRef, waitForAuth } from './firebase';
 import { ADMIN_HASH } from './config';
 import { customConfirm } from './modal';
 import { toggleMusic } from './audio';
@@ -210,10 +210,10 @@ function handleSetVictoryBgm(): void {
 
 function extractYoutubeId(url: string): string | null {
   const patterns = [
-    /(?:youtube\.com\/watch\?v=)([a-zA-Z0-9_-]{11})/,
-    /(?:youtu\.be\/)([a-zA-Z0-9_-]{11})/,
-    /(?:youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/,
-    /(?:youtube\.com\/shorts\/)([a-zA-Z0-9_-]{11})/,
+    /(?:youtube\.com\/watch\?v=)([a-zA-Z0-9_-]{11})(?:[?#&/]|$)/,
+    /(?:youtu\.be\/)([a-zA-Z0-9_-]{11})(?:[?#&/]|$)/,
+    /(?:youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})(?:[?#&/]|$)/,
+    /(?:youtube\.com\/shorts\/)([a-zA-Z0-9_-]{11})(?:[?#&/]|$)/,
   ];
   for (const p of patterns) {
     const m = url.match(p);
@@ -223,7 +223,8 @@ function extractYoutubeId(url: string): string | null {
   return null;
 }
 
-function handleSetYoutube(): void {
+
+async function handleSetYoutube(): Promise<void> {
   const input = document.getElementById('admin-youtube-input') as HTMLInputElement;
   const url = input.value.trim();
   if (!url) {
@@ -235,6 +236,7 @@ function handleSetYoutube(): void {
     showAdminMsg('msg-youtube', '⚠ URL YouTube tidak valid. Gunakan link youtube.com/watch?v=...', 'error');
     return;
   }
+  await waitForAuth();
   set(configYoutubeIdRef, videoId)
     .then(() => showAdminMsg('msg-youtube', `✓ YouTube BGM diatur (video ID: ${videoId}).`, 'success'))
     .catch(() => showAdminMsg('msg-youtube', '✗ Gagal memperbarui YouTube BGM.', 'error'));
